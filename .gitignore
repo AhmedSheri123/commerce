@@ -43,3 +43,6 @@ build/
 
 # Secrets / dotenv
 .env
+
+commerce\settings.py
+apache.txt
