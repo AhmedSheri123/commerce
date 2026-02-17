@@ -242,7 +242,7 @@ def DeleteCategory(request, category_id):
 #=======================================
 
 def ViewProducts(request, category_id):
-    categories = ProductModel.objects.filter(category_id=category_id)
+    categories = ProductModel.objects.filter(category_id=category_id).order_by('stage')
     q = request.GET.get('q', '').strip()
 
     if q:
