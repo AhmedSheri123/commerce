@@ -149,8 +149,7 @@ def buy_product_ajax(request):
             total_earned=product.profit
         )
     
-    profile.balance -= product.price
-    profile.balance += product.profit
+    profile.balance += (product.price + product.profit)
     profile.save()
     user_progress.save()
 
