@@ -1,0 +1,107 @@
+{% extends "management_base.html" %}
+
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 lg:px-12 space-y-6">
+    <div class="bg-white rounded-lg shadow-sm p-5">
+      <h1 class="text-xl font-semibold text-gray-900 mb-4">Support Links</h1>
+      <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% csrf_token %}
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Platform</label>
+          {{ form.platform }}
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Title</label>
+          {{ form.title }}
+        </div>
+        <div class="md:col-span-2">
+          <label class="block mb-1 text-sm font-medium text-gray-700">URL / Handle</label>
+          {{ form.url }}
+        </div>
+        <div class="md:col-span-2">
+          <label class="block mb-1 text-sm font-medium text-gray-700">Icon Image</label>
+          {{ form.icon }}
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Order</label>
+          {{ form.order }}
+        </div>
+        <div class="flex items-end">
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+            {{ form.is_active }}
+            <span>Active</span>
+          </label>
+        </div>
+        <div class="md:col-span-2">
+          <button type="submit" class="inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800">
+            Add Support Link
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600">
+          <thead class="text-xs uppercase bg-gray-50 text-gray-700">
+            <tr>
+              <th class="px-4 py-3">Icon</th>
+              <th class="px-4 py-3">Platform</th>
+              <th class="px-4 py-3">Title</th>
+              <th class="px-4 py-3">URL</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Order</th>
+              <th class="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in contacts %}
+              <tr class="border-b">
+                <td class="px-4 py-3">
+                  {% if c.icon %}
+                    <img src="{{ c.icon.url }}" alt="{{ c.title }}" class="h-8 w-8 rounded-full object-cover border border-gray-200">
+                  {% else %}
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">-</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3">{{ c.get_platform_display }}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">{{ c.title }}</td>
+                <td class="px-4 py-3">
+                  <a href="{{ c.url }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ c.url }}</a>
+                </td>
+                <td class="px-4 py-3">
+                  {% if c.is_active %}
+                    <span class="inline-flex rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">Active</span>
+                  {% else %}
+                    <span class="inline-flex rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3">{{ c.order }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <form method="post" action="{% url 'management:support_contact_toggle' c.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="text-indigo-600 hover:underline text-sm">
+                        {% if c.is_active %}Disable{% else %}Enable{% endif %}
+                      </button>
+                    </form>
+                    <form method="post" action="{% url 'management:support_contact_delete' c.id %}" onsubmit="return confirm('Delete this support link?');">
+                      {% csrf_token %}
+                      <button type="submit" class="text-red-600 hover:underline text-sm">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-gray-500">No support links found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

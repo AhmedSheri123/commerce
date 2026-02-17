@@ -1,0 +1,292 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commerce — Home{% endblock %}
+
+{% block content %}
+<div class="w-full py-2.5 font-medium text-sm text-white bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500">
+    <div class="max-w-screen-xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-4 text-center">
+        <p>Discover how AI helps you find the best deals and achieve greater profits easily and intelligently.</p>
+
+    </div>
+</div>
+
+<section class="bg-white lg:grid lg:h-screen lg:place-content-center">
+  <div class="mx-auto w-screen max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+    <div class="mx-auto max-w-prose text-center">
+
+      <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center lazy-video">
+          <source src="{% static 'img/ezgif-4de2564cedf63f295.mp4' %}" type="video/webm" >
+          
+          <!-- Fallback text for browsers that do not support the video tag -->
+          Your browser does not support the video tag.
+      </video>
+
+      <h1 class="text-4xl font-bold text-gray-900 sm:text-5xl">
+        Smart
+        
+        <strong class="text-indigo-600"> Commerce </strong>
+        Platform
+        
+      </h1>
+
+      <p class="mt-4 text-base text-pretty text-gray-700 sm:text-lg/relaxed">
+    A platform that combines AI and advanced analytics to help you find the best offers and enjoy a smooth, intelligent shopping experience.
+      </p>
+
+      <div class="mt-4 flex justify-center gap-4 sm:mt-6">
+        <a href="{% url 'products:products' %}" class="inline-block rounded border border-indigo-600 bg-indigo-600 px-5 py-3 font-medium text-white shadow-sm transition-colors hover:bg-indigo-700" href="#">
+          Start Trading
+        </a>
+
+        <a href="{% url 'orders:orders' %}" class="inline-block rounded border border-gray-200 px-5 py-3 font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900" href="#">
+          Orders
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+        <!-- From Uiverse.io by Javierrocadev --> 
+        <div class="my-5 mx-auto before:absolute before:bg-sky-500 before:w-3 before:h-12 before:top-24 before:-right-2 before:-z-10 before:rounded-2xl before:shadow-inner before:shadow-gray-50 relative w-60 h-60 bg-sky-500 shadow-inner shadow-gray-50 flex justify-center items-center rounded-3xl">
+        <div class="w-56 h-56 bg-neutral-900 shadow-inner shadow-gray-50 flex justify-center items-center rounded-3xl">
+            <div class="flex flex-col items-center justify-center rounded-2xl bg-neutral-900 shadow-inner shadow-gray-50 w-52 h-52">
+            <div class="before:absolute before:w-12 before:h-12 before:bg-orange-800 before:rounded-full before:blur-xl before:top-16 relative   flex flex-col justify-around items-center w-44 h-40 bg-neutral-900 text-gray-50">
+                <span class="">Number of Users</span>
+                <span class="z-10 flex items-center text-5xl text-amber-600 [text-shadow:_2px_2px_#fff,_1px_2px_#fff]">12000+</span>
+                <div class="text-gray-50 w-48 flex flex-row justify-evenly">
+                <span class="text-xs font-bold">300m$</span>
+                <div class="flex flex-row items-center">
+
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="w-5 h-5 fill-yellow-500 animate-bounce" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M11 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8m5-4a5 5 0 1 1-10 0 5 5 0 0 1 10 0"/>
+  <path d="M9.438 11.944c.047.596.518 1.06 1.363 1.116v.44h.375v-.443c.875-.061 1.386-.529 1.386-1.207 0-.618-.39-.936-1.09-1.1l-.296-.07v-1.2c.376.043.614.248.671.532h.658c-.047-.575-.54-1.024-1.329-1.073V8.5h-.375v.45c-.747.073-1.255.522-1.255 1.158 0 .562.378.92 1.007 1.066l.248.061v1.272c-.384-.058-.639-.27-.696-.563h-.668zm1.36-1.354c-.369-.085-.569-.26-.569-.522 0-.294.216-.514.572-.578v1.1zm.432.746c.449.104.655.272.655.569 0 .339-.257.571-.709.614v-1.195z"/>
+  <path d="M1 0a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h4.083q.088-.517.258-1H3a2 2 0 0 0-2-2V3a2 2 0 0 0 2-2h10a2 2 0 0 0 2 2v3.528c.38.34.717.728 1 1.154V1a1 1 0 0 0-1-1z"/>
+  <path d="M9.998 5.083 10 5a2 2 0 1 0-3.132 1.65 6 6 0 0 1 3.13-1.567"/>
+</svg>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="w-5 h-5 fill-current ms-1" viewBox="0 0 16 16">
+  <path d="M2.97 1.35A1 1 0 0 1 3.73 1h8.54a1 1 0 0 1 .76.35l2.609 3.044A1.5 1.5 0 0 1 16 5.37v.255a2.375 2.375 0 0 1-4.25 1.458A2.37 2.37 0 0 1 9.875 8 2.37 2.37 0 0 1 8 7.083 2.37 2.37 0 0 1 6.125 8a2.37 2.37 0 0 1-1.875-.917A2.375 2.375 0 0 1 0 5.625V5.37a1.5 1.5 0 0 1 .361-.976zm1.78 4.275a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0 1.375 1.375 0 1 0 2.75 0V5.37a.5.5 0 0 0-.12-.325L12.27 2H3.73L1.12 5.045A.5.5 0 0 0 1 5.37v.255a1.375 1.375 0 0 0 2.75 0 .5.5 0 0 1 1 0M1.5 8.5A.5.5 0 0 1 2 9v6h1v-5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5h6V9a.5.5 0 0 1 1 0v6h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1V9a.5.5 0 0 1 .5-.5M4 15h3v-5H4zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zm3 0h-2v3h2z"/>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="w-5 h-5 fill-current ms-1" viewBox="0 0 16 16">
+  <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0m7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-1.646-7.646-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708"/>
+</svg>
+                </div>
+                </div>
+            </div>
+            <span class="text-gray-700 text-lg font-light">2mCrypto</span>
+            </div>
+        </div>
+        </div>
+
+
+
+<div class="max-w-4xl mx-auto p-6">
+  <div class="space-y-4">
+    <div class="bg-white rounded-xl shadow p-6 flex items-start space-x-4">
+      <div class="flex-shrink-0 text-indigo-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7a1 1 0 00.9 1.3h12.45M7 13l1.5 7h9l1.5-7"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="font-semibold text-lg text-gray-900 mb-2">Shopping Assistant Designed Specifically for Costco</h2>
+        <p class="text-gray-700">Costco Shopping Assistant is an AI-powered platform focused on smart shopping. It combines advanced algorithms and data-analysis tools to help users find the best offers and improve their Costco shopping experience.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 flex items-start space-x-4">
+      <div class="flex-shrink-0 text-green-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="font-semibold text-lg text-gray-900 mb-2">Smart AI Trading Technology</h2>
+        <p class="text-gray-700">Using our advanced AI technology, we analyze market data accurately and execute trades, enabling automation and increasing trading efficiency.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 flex items-start space-x-4">
+      <div class="flex-shrink-0 text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6h4v2H5v-2h4z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="font-semibold text-lg text-gray-900 mb-2">Diverse Trading Strategies</h2>
+        <p class="text-gray-700">We provide a variety of trading strategies to meet different user needs, and we adjust strategies flexibly based on market changes.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 flex items-start space-x-4">
+      <div class="flex-shrink-0 text-red-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3l-6.93-12a2 2 0 00-3.48 0l-6.93 12a2 2 0 001.74 3z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="font-semibold text-lg text-gray-900 mb-2">Strong Risk Management</h2>
+        <p class="text-gray-700">We are equipped with a strict risk-control system to ensure safe and stable trading and avoid unnecessary risks to user funds.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-6 flex items-start space-x-4">
+      <div class="flex-shrink-0 text-purple-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8a6 6 0 00-12 0v4a6 6 0 0012 0V8z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="font-semibold text-lg text-gray-900 mb-2">Professional User Support</h2>
+        <p class="text-gray-700">Our professional team is always ready to provide expert user support. If you face any issue, our customer service team will assist you promptly.</p>
+      </div>
+    </div>
+  </div>
+
+
+
+<span class="flex items-center mt-5">
+  <span class="h-px flex-1 bg-gray-300"></span>
+
+  <span class="shrink-0 px-4 text-gray-900">Reviews</span>
+
+  <span class="h-px flex-1 bg-gray-300"></span>
+</span>
+
+
+
+    <!-- review -->
+    <div class="flex flex-wrap gap-6 text-center">
+    
+        <!-- From Uiverse.io by sudhucodes -->
+        <div class="max-w-sm border border-gray-300 rounded-lg shadow-lg bg-white p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white text-lg font-semibold rounded-full">
+                    +1
+                </div>
+                <div>
+                    <div class="text-gray-900 font-medium">+18049660123</div>
+                </div>
+            </div>
+    
+            <div class="flex text-yellow-500 text-xl">★★★★★</div>
+    
+            <p class="text-gray-700">Honestly, I tried the platform for a short time and the results were amazing. I was able to make good profits without wasting time tracking the market manually. The platform is truly smart and helps you make the right decisions quickly.</p>
+    
+    
+        </div>
+        <!-- end -->
+        <!-- From Uiverse.io by sudhucodes -->
+        <div class="max-w-sm border border-gray-300 rounded-lg shadow-lg bg-white p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white text-lg font-semibold rounded-full">
+                    +31
+                </div>
+                <div>
+                    <div class="text-gray-900 font-medium">+3197058016477</div>
+                </div>
+            </div>
+    
+            <div class="flex text-yellow-500 text-xl">★★★★★</div>
+    
+            <p class="text-gray-700">I was hesitant at first, but after using the platform I discovered it is very profitable. The suggestions helped me double my profits within a few weeks. Great experience, and I recommend everyone to try it.</p>
+    
+    
+        </div>
+        <!-- end -->
+        <!-- From Uiverse.io by sudhucodes -->
+        <div class="max-w-sm border border-gray-300 rounded-lg shadow-lg bg-white p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white text-lg font-semibold rounded-full">
+                    +1
+                </div>
+                <div>
+                    <div class="text-gray-900 font-medium">+17406930721</div>
+                </div>
+            </div>
+    
+            <div class="flex text-yellow-500 text-xl">★★★★★</div>
+    
+            <p class="text-gray-700">The platform completely changed how I trade. I started achieving consistent profits and feeling much more confident in my decisions. What I liked most was the ease of use and responsive support.</p>
+    
+    
+        </div>
+        <!-- end -->
+        <!-- From Uiverse.io by sudhucodes -->
+        <div class="max-w-sm border border-gray-300 rounded-lg shadow-lg bg-white p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white text-lg font-semibold rounded-full">
+                    +49
+                </div>
+                <div>
+                    <div class="text-gray-900 font-medium">+4928328964105</div>
+                </div>
+            </div>
+    
+            <div class="flex text-yellow-500 text-xl">★★★★★</div>
+    
+            <p class="text-gray-700">Honestly, the platform is a major leap in the world of trading. The profits I achieved through it were better than any previous experience, and I believe it deserves all the attention it has received.</p>
+    
+    
+        </div>
+        <!-- end -->
+        <!-- From Uiverse.io by sudhucodes -->
+        <div class="max-w-sm border border-gray-300 rounded-lg shadow-lg bg-white p-6 space-y-4">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="h-12 w-12 flex items-center justify-center bg-blue-500 text-white text-lg font-semibold rounded-full">
+                    +1
+                </div>
+                <div>
+                    <div class="text-gray-900 font-medium">+19035463899</div>
+                </div>
+            </div>
+    
+            <div class="flex text-yellow-500 text-xl">★★★★★</div>
+    
+            <p class="text-gray-700">An excellent and highly profitable platform. I felt it saved me a lot of effort in tracking the market. Every day I see great results, and finally I feel I am in the right place. Thank you.</p>
+    
+    
+        </div>
+        <!-- end -->
+
+    
+    
+    </div>
+
+
+
+</div>
+
+
+
+<div class="bg-blue-900 py-24 sm:py-32 mt-3">
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <h2 class="text-center text-lg/8 font-semibold text-white">Trusted by the most innovative teams in the world</h2>
+    <div class="mx-auto mt-10 grid max-w-lg grid-cols-4 items-center gap-x-8 gap-y-10 sm:max-w-xl sm:grid-cols-6 sm:gap-x-10 lg:mx-0 lg:max-w-none lg:grid-cols-5">
+      <img width="158" height="48" src="https://tailwindcss.com/plus-assets/img/logos/158x48/transistor-logo-white.svg" alt="Transistor" class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" />
+
+      <img width="158" height="48" src="https://tailwindcss.com/plus-assets/img/logos/158x48/reform-logo-white.svg" alt="Reform" class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" />
+
+      <img width="158" height="48" src="https://tailwindcss.com/plus-assets/img/logos/158x48/tuple-logo-white.svg" alt="Tuple" class="col-span-2 max-h-12 w-full object-contain lg:col-span-1" />
+
+      <img width="158" height="48" src="https://tailwindcss.com/plus-assets/img/logos/158x48/savvycal-logo-white.svg" alt="SavvyCal" class="col-span-2 max-h-12 w-full object-contain sm:col-start-2 lg:col-span-1" />
+
+      <img width="158" height="48" src="https://tailwindcss.com/plus-assets/img/logos/158x48/statamic-logo-white.svg" alt="Statamic" class="col-span-2 col-start-2 max-h-12 w-full object-contain sm:col-start-auto lg:col-span-1" />
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

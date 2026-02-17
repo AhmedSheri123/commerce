@@ -1,0 +1,87 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+    <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                <div class="w-full md:w-2/3">
+                    <form class="flex flex-col md:flex-row items-center gap-3" method="get">
+                        <div class="relative w-full md:w-1/2">
+                            <input type="text" name="q" value="{{ q }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="بحث بالاسم/الإيميل/العنوان" />
+                        </div>
+                        <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">كل الحالات</option>
+                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>معلق</option>
+                            <option value="approved" {% if status == 'approved' %}selected{% endif %}>موافق</option>
+                            <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>مرفوض</option>
+                        </select>
+                        <select name="order" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="newest" {% if order != 'oldest' %}selected{% endif %}>الأحدث</option>
+                            <option value="oldest" {% if order == 'oldest' %}selected{% endif %}>الأقدم</option>
+                        </select>
+                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                            فلترة
+                        </button>
+                    </form>
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                    إجمالي السحوبات: <span class="font-semibold">{{ withdrawals|length }}</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th class="px-4 py-3">المستخدم</th>
+                            <th class="px-4 py-3">المبلغ</th>
+                            <th class="px-4 py-3">العنوان</th>
+                            <th class="px-4 py-3">الحالة</th>
+                            <th class="px-4 py-3">التاريخ</th>
+                            <th class="px-4 py-3"><span class="sr-only">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in withdrawals %}
+                        <tr class="border-b dark:border-gray-700">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ tx.user.username }}</td>
+                            <td class="px-4 py-3">{{ tx.amount|floatformat:6 }}</td>
+                            <td class="px-4 py-3">{{ tx.wallet_address|default:"-" }}</td>
+                            <td class="px-4 py-3">
+                                {% if tx.status == 'pending' %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded">معلق</span>
+                                {% elif tx.status == 'approved' %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded">موافق</span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded">مرفوض</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                            <td class="px-4 py-3">
+                                {% if tx.status == 'pending' %}
+                                <div class="flex items-center justify-end gap-2">
+                                    <form method="post" action="{% url 'management:approve_withdrawal' tx.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-green-600 hover:underline text-sm">موافقة</button>
+                                    </form>
+                                    <form method="post" action="{% url 'management:reject_withdrawal' tx.id %}" onsubmit="return confirm('رفض السحب؟');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-600 hover:underline text-sm">رفض</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-500">لا توجد سحوبات.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

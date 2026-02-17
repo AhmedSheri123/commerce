@@ -1,0 +1,12 @@
+{% load static %}
+<nav class="navbar">
+  <div class="container">
+    <a class="brand" href="{% url 'home:index' %}">
+      <img src="{% static 'home/logo.png' %}" alt="Logo" style="height:28px; vertical-align:middle;"> Commerce
+    </a>
+    <ul class="nav-links">
+      <li><a href="{% url 'home:index' %}">Home</a></li>
+      <li><a href="/admin/">Admin</a></li>
+    </ul>
+  </div>
+</nav>

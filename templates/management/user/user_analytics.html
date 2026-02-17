@@ -1,0 +1,287 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+    <div class="mx-auto max-w-screen-lg px-4 lg:px-12">
+        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">تحليلات المستخدم</h2>
+                <a href="{% url 'management:users' %}" class="text-blue-600 hover:underline text-sm">رجوع للمستخدمين</a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div class="text-sm text-gray-500">المستخدم</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ user_obj.username }}</div>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div class="text-sm text-gray-500">البريد</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ user_obj.email|default:"-" }}</div>
+                </div>
+            </div>
+
+            {% if progress %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">المنصة</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.platform.name }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">الفئة</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.name }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">مرحلة الفئة</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.stage }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">المنتج الحالي</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.name }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">مرحلة المنتج</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.stage }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">سعر المنتج</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.price|floatformat:2 }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">ربح المنتج</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.profit|floatformat:2 }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">إجمالي ربح المستخدم</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.total_earned|floatformat:2 }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">المنتجات المكتملة</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.comleted_products }} / {{ progress.all_products }}</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">نسبة التقدم</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.progress_percentage|floatformat:2 }}%</div>
+                </div>
+                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-500">الحالة</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">
+                        {% if progress.is_done %}مكتمل{% else %}قيد التنفيذ{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-6 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                المستخدم غير مشترك في عملية شراء المنتجات حاليًا.
+            </div>
+            {% endif %}
+
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">تعديل المنتج/الفئة/المنصة</h3>
+                    {% if progress %}
+                    <form method="post" action="{% url 'management:delete_user_progress' user_obj.id %}" onsubmit="return confirm('حذف الاشتراك؟');">
+                        {% csrf_token %}
+                        
+                        <button type="submit" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">حذف الاشتراك</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <form method="post" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end"
+                      data-categories-url="{% url 'management:api_categories_by_platform' 0 %}"
+                      data-products-url="{% url 'management:api_products_by_category' 0 %}">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ progress_form.platform.label }}</label>
+                        {{ progress_form.platform }}
+                        {% for error in progress_form.platform.errors %}
+                            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ progress_form.category.label }}</label>
+                        {{ progress_form.category }}
+                        {% for error in progress_form.category.errors %}
+                            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ progress_form.product.label }}</label>
+                        {{ progress_form.product }}
+                        {% for error in progress_form.product.errors %}
+                            <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="md:col-span-3">
+                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                            حفظ التعديل
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="p-4 border-b text-sm font-semibold text-gray-700 dark:text-gray-200">سجل الإيداعات</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3">المبلغ</th>
+                                    <th class="px-4 py-3">TXID</th>
+                                    <th class="px-4 py-3">الحالة</th>
+                                    <th class="px-4 py-3">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in deposits %}
+                                <tr class="border-b dark:border-gray-700">
+                                    <td class="px-4 py-3">{{ d.amount|floatformat:6 }}</td>
+                                    <td class="px-4 py-3">{{ d.txid }}</td>
+                                    <td class="px-4 py-3">{{ d.get_status_display }}</td>
+                                    <td class="px-4 py-3">{{ d.created_at|date:"Y-m-d H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">لا توجد إيداعات.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="p-4 border-b text-sm font-semibold text-gray-700 dark:text-gray-200">سجل السحوبات</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-4 py-3">المبلغ</th>
+                                    <th class="px-4 py-3">العنوان</th>
+                                    <th class="px-4 py-3">الحالة</th>
+                                    <th class="px-4 py-3">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in withdrawals %}
+                                <tr class="border-b dark:border-gray-700">
+                                    <td class="px-4 py-3">{{ w.amount|floatformat:6 }}</td>
+                                    <td class="px-4 py-3">{{ w.wallet_address|default:"-" }}</td>
+                                    <td class="px-4 py-3">{{ w.get_status_display }}</td>
+                                    <td class="px-4 py-3">{{ w.created_at|date:"Y-m-d H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">لا توجد سحوبات.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-4 border-b text-sm font-semibold text-gray-700 dark:text-gray-200">أسئلة المستخدم</div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th class="px-4 py-3">السؤال</th>
+                                <th class="px-4 py-3">الإجابة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ans in survey_answers %}
+                            <tr class="border-b dark:border-gray-700">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ ans.question.text }}</td>
+                                <td class="px-4 py-3">
+                                    {% if ans.option %}{{ ans.option.text }}
+                                    {% elif ans.text_answer %}{{ ans.text_answer }}
+                                    {% elif ans.bool_answer is not None %}{{ ans.bool_answer|yesno:"نعم,لا" }}
+                                    {% elif ans.number_answer %}{{ ans.number_answer }}
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="px-4 py-6 text-center text-gray-500">لا توجد إجابات.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+  (function () {
+    const form = document.querySelector('form[data-categories-url]');
+    if (!form) return;
+
+    const platformSelect = form.querySelector('select[name="platform"]');
+    const categorySelect = form.querySelector('select[name="category"]');
+    const productSelect = form.querySelector('select[name="product"]');
+    const categoriesUrlBase = form.dataset.categoriesUrl;
+    const productsUrlBase = form.dataset.productsUrl;
+
+    const setOptions = (select, items, selectedId) => {
+      select.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'اختر...';
+      select.appendChild(placeholder);
+      items.forEach((item) => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.name;
+        if (selectedId && String(item.id) === String(selectedId)) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    };
+
+    const fetchCategories = async (platformId, selectedCategoryId) => {
+      if (!platformId) {
+        setOptions(categorySelect, [], null);
+        setOptions(productSelect, [], null);
+        return;
+      }
+      const url = categoriesUrlBase.replace('/0/', `/${platformId}/`);
+      const res = await fetch(url);
+      const data = await res.json();
+      setOptions(categorySelect, data.categories || [], selectedCategoryId);
+    };
+
+    const fetchProducts = async (categoryId, selectedProductId) => {
+      if (!categoryId) {
+        setOptions(productSelect, [], null);
+        return;
+      }
+      const url = productsUrlBase.replace('/0/', `/${categoryId}/`);
+      const res = await fetch(url);
+      const data = await res.json();
+      setOptions(productSelect, data.products || [], selectedProductId);
+    };
+
+    platformSelect.addEventListener('change', async (e) => {
+      await fetchCategories(e.target.value, null);
+      setOptions(productSelect, [], null);
+    });
+
+    categorySelect.addEventListener('change', async (e) => {
+      await fetchProducts(e.target.value, null);
+    });
+
+    const initialPlatform = platformSelect.value;
+    const initialCategory = categorySelect.value;
+    const initialProduct = productSelect.value;
+
+    fetchCategories(initialPlatform, initialCategory).then(() => {
+      fetchProducts(categorySelect.value || initialCategory, initialProduct);
+    });
+  })();
+</script>
+{% endblock content %}

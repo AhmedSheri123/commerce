@@ -1,0 +1,436 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commerce — Home{% endblock %}
+
+{% block content %}
+<div class="w-full md:p-10 mb-5 min-h-screen ">
+  <div class="p-4">
+    <h2 class="pb-4 text-lg font-medium">All Products</h2>
+    <!-- <div
+        class="flex flex-col items-center max-w-4xl w-full overflow-hidden rounded-md bg-white border border-gray-500/20">
+        <table class="md:table-auto table-fixed w-full overflow-hidden">
+            <thead class="text-gray-900 text-sm text-right">
+                <tr>
+                    <th class="px-4 py-3 font-semibold truncate">Image</th>
+                    <th class="px-4 py-3 font-semibold truncate">Stages</th>
+                    <th class="px-4 py-3 font-semibold truncate">Order</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm text-gray-500">
+              {% for platform in platforms %}
+                <tr class="border-t border-gray-500/20">
+                    <td class="md:px-4 pr-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
+                        <div class="border border-gray-300 rounded overflow-hidden"><img alt="Product" class="w-16"
+                                src="{{ platform.image.url }}">
+                        </div><span class="truncate max-sm:hidden w-full">{{ platform.name }}</span>
+                    </td>
+
+                    <td class="px-4 py-3">
+                    <button data-platform-id="{{ platform.id }}" data-modal-target="default-modal" data-modal-toggle="default-modal" 
+                    onclick="loadProducts(this)"
+                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
+                          font-medium rounded-md text-[11px] px-2.5 py-1 text-center"
+                    type="button">
+                      View
+                    </button>
+                    </td>
+                    <td class="px-4 py-3">
+                    <button
+                      id="show-product-btn"
+                      data-platform-id="{{ platform.id }}"
+                      data-modal-target="product-detail-modal"
+                      data-modal-toggle="product-detail-modal"
+                      onclick="loadProduct(this)"
+                      class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
+                            font-medium rounded-md text-[11px] px-2.5 py-1 text-center"
+                      type="button">
+                      Order
+                    </button>
+
+                    </td>
+
+                </tr>
+              {% endfor %}
+                
+            </tbody>
+        </table>
+
+    </div> -->
+    <div class="flex gap-2">
+              {% for platform in platforms %}
+
+    <button
+      id="show-product-btn"
+      data-platform-id="{{ platform.id }}"
+      data-modal-target="product-detail-modal"
+      data-modal-toggle="product-detail-modal"
+      onclick="loadProduct(this)"
+      class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
+            font-medium rounded-md text-[11px] px-2.5 py-1 text-center w-100 block border-solid border p-2 rounded"
+      type="button">
+                        <div class="border border-gray-300 rounded overflow-hidden"><img alt="Product" class="w-16"
+                                src="{{ platform.image.url }}">
+                        </div><span class="truncate w-full">{{ platform.name }}</span>
+      
+    </button>
+              {% endfor %}
+
+  </div>
+</div>
+
+<div class="w-full md:p-10 p-4  bg-white border-gray-200 border-t-2">
+      <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center  mb-5 lazy-video">
+          <source src="{% static 'img/Produce_3.mp4' %}" type="video/webm" >
+          
+          <!-- Fallback text for browsers that do not support the video tag -->
+          Your browser does not support the video tag.
+      </video>
+      <!-- <h1 class="text-4xl font-bold text-gray-900 sm:text-5xl text-center mt-10">
+        Smart
+        
+        <strong class="text-indigo-600"> Commerce </strong>
+        Platform
+        
+      </h1> -->
+
+
+
+      
+
+
+<div class="mb-2">
+  <img width="20" class="inline-block" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIgAAACLCAYAAAC6LtH8AAAACXBIWXMAACE3AAAhNwEzWJ96AAAFaklEQVR4nO2d0XHbOBBAl5r7vBmlg/jj/p0OrKsgZgVWB3EqiNyB0oFcAZ0KTu7A7kD+y6dVAW9IQGedzt7oLABcgO/N8MeakVb00wJYLMmqbVsZDVV9JiLdMfNfeXbw1bvXPorI/cHfH0TkWUQ2/dE269GcsqIFqeqZl6A7LgK/+6MXZ90fbbMJ/P4mKEuQqv4gIpf++Jz40zth7vqjbR4Sf3Y0yhCkqndSXBmIRrwsq/5om2cD8bybfAV5yRYLP2+wyNZnlUWuQ1CeglR1J8W1iEwNRHMstzmKkpcgVT03njGO4bsXJYuhJw9BqvqTiCwjrESGYuslWVoP1L4gbjj5ZiCSGHT1lrnlYceuIK6o1U3wzg1EE5NtP59qm5XF4GwK4patq8wmoady60UxNTexJ0hVd+PyFwORDMFjX/U1JIkdQVxdY2mo2DUUWy+JiWqsDUGcHOsRzDeOxYwkk6EDQI5XmfbnxC3vB2VYQZBDw4QkQ2cQ5NAZXJLhBKnqFXIcxU6SsyE+fBhBXHV07KuV/8O0Lxq6ITkp6QVxXV6lls5jcu7LAElJu8x1v4DNyCqkofmacpMvdQa5Q46TWaSctKYTpKqvC9quH5Kp36dKQhpB3Ax8YfBk58q5/8FFJ1UGWTK0BGeRYukbXxC3akl9CcIYmKbIyikyCENLPK5iZ5G4grjGHyamcYk6YY2dQZJMpEbORcxlbzxB3NyD7JGGaD/EmBmE7JGOaHOROIK4YFm5pGUe49NiZZAowUL6c44g5fAxxmQ1vCAuyJyvnc2Z4D/MGBnkMsJ7wkDnHkHKIvgwE1YQ1xBEn+mwHN6Y7yRCZ5CgwcG7MC3I4Bf6ABkEdKYhq6pkkDIxKwhdYzYIlsnDCeJ2b8EGwS6wGv7qfohBsKE+pCBkkAIhg5SJ2Ukq2CDYZimCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgAqCgErVtu3L6+5heNf+gTQXnLpR8SQiDyKylLZZ7774iyBVPe9f5LlzIHIrbdP54AVxz5v7ixMDe/SS7ATZhHwIDRTDnxOp6k/IAW8wn/AwQlA4m4R8xiqUx8QvbQBepRNkzamBN7ibSNs8i8h3zhAc0BXOVvuFsm6oOecsgYhs+8VL2zy87MW0TbfcvfEvwni577da2qafm/57L2aHq6yeyu8i8geiJeGnP05lI22z2X+P1wUB8LDdDyoIAioIAioIAiq/FXl6XGfcWeJPfd4tDUuinFWMk2IhIlcDR/Lo2/ZWA8cRhDIEsdku+U/bXs7kL4hreFob7aW9kbZZGIjj3ZQwSV0YbrT+5oe+bClBkM8GYtC4tBvar8lbkDB7RrHJumOPOgio5C7Is4EYiiZvQQosTFmjhCHGeoNT1j2/JQhi/R+QdZZDkLg8+abwbClBkDsDMbyF5diOIn9BXA/lo4FIXiP7DbtS6iBLAzEccl/CKqsMQdzW+pOBSPbJepNuR0mV1GsDMey437+NU86UI0jbdBPCHwYi6eoy2feB7ChtL2ZuYKiZH158lDNlCeJqDpcDVldvfCYrhjKvrBumy6yIFsNDytzud8vLWcJM8rVEOaTofhAnyZm/Wj0WnYC1tI3FOkwQxnHxdpyu99t+aZ35XsuvGM/V/VX9wddK5ife9vO2L4IVtFLRGOftH6r60q92ZkfIsvUT3rv+KDxjHML9QURtfv7PDVVGhYj8DYfZYa/1oR4WAAAAAElFTkSuQmCC">
+  <span class="font-semibold text-xl">warning:</span>
+  
+</div>
+<ul class="max-w-md space-y-2 text-gray-500 list-disc list-inside dark:text-gray-500 mb-5">
+    <li>
+        Linked accounts cannot top up each other. Mutual top-up behavior will be considered malicious hijacking, and a 10% penalty will be imposed for the first time. The second time, the account will be blocked.
+    </li>
+    <li>
+        Account funds can be withdrawn after all orders are completed. (If orders are not completed, the system will automatically stop processing the remaining orders for that day.)
+    </li>
+    <li>
+        Each account can only link one USDT account. If an error occurs, please contact customer service.
+    </li>
+</ul>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<div id="complition-popup-modal" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-lg shadow-sm ">
+            <button type="button" onclick="hideComplitionModal()" class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" data-modal-hide="complition-popup-modal">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                </svg>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="p-4 md:p-5 text-center">
+                <img class="mx-auto mb-4 lazy-gif" src="{% static 'img/Success.gif' %}" alt="">
+                <h3 class="mb-5 text-lg font-normal text-gray-500 ">All products have been sold</h3>
+                <div class="flex gap-1 items-center justify-center">
+                <a href="{% url 'accounts:transactions' %}" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                    Withdraw Balance
+                </a>
+                <button onclick="hideComplitionModal()" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Order Products</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- Main modal -->
+<div id="default-modal" tabindex="-1" aria-hidden="true"
+  class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-full max-w-2xl max-h-full">
+    <!-- Modal content -->
+    <div class="relative bg-white rounded-lg shadow-sm">
+
+      <div
+        class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200 gap-3">
+        <div class="bg-white p-1.5 rounded border border-gray-500/30">
+          <img class="h-9" id="platform-image"
+            src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyFavicon.svg"
+            alt="dummyFavicon">
+        </div>
+        <div>
+          <h3 class="text-base font-medium text-gray-800" id="platform-name">
+            .....
+          </h3>
+          <span id="products-count">...</span>
+        </div>
+        <button type="button"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+          data-modal-hide="default-modal">
+          <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+          </svg>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="p-2 md:p-3 space-y-4">
+
+        <div class="max-w-md mx-auto rounded-lg">
+
+          <!-- Title -->
+          <h2 class="text-xl font-bold text-gray-800 text-center">
+            Stages and Products
+          </h2>
+
+
+          <div role="status"
+            class="product_skeleton relative max-w-md p-4 space-y-4 border border-gray-200 divide-y divide-gray-200 rounded-sm shadow-sm animate-pulse dark:divide-gray-700 md:p-6 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+              </div>
+              <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+            </div>
+            <div class="flex items-center justify-between pt-4">
+              <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+              </div>
+              <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+            </div>
+            <div class="flex items-center justify-between pt-4">
+              <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+              </div>
+              <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+            </div>
+            <div class="flex items-center justify-between pt-4">
+              <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+              </div>
+              <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+            </div>
+            <div class="flex items-center justify-between pt-4">
+              <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+              </div>
+              <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+            </div>
+            <span class="sr-only">Loading...</span>
+          </div>
+
+
+          <!-- Scroll Container -->
+          <div class="h-80 overflow-y-auto space-y-4 overflow-x-hidden p-3" dir="rtl" id="view-products-details">
+
+
+
+
+          </div>
+        </div>
+      </div>
+      <!-- Modal footer -->
+      <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
+        <button data-modal-hide="default-modal" type="button"
+          class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+<!-- Main modal -->
+<div id="product-detail-modal" tabindex="-1" aria-hidden="true"
+  class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-50 flex justify-center items-center bg-black/20">
+  <div class="relative p-4 w-full max-w-2xl max-h-full">
+
+    <!-- Modal content -->
+    <div class="relative bg-white rounded-lg shadow-lg border border-gray-200 min-h-screen">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 gap-3">
+          <div class="flex gap-2">
+            <div class="bg-white p-1.5 rounded border border-gray-300">
+              <img class="h-9" id="modal-product-image"
+                src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyFavicon.svg"
+                alt="dummyFavicon">
+            </div>
+
+            <div>
+              <h3 id="modal-category" class="text-base font-semibold text-gray-800"></h3>
+              <span id="modal-count" class="text-sm text-gray-500"></span>
+            </div>
+          </div>
+
+          <button type="button" id="product-detail-modal-button"
+            class="text-gray-400 hover:bg-gray-100 hover:text-gray-700 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center"
+            data-modal-hide="product-detail-modal">
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+            </svg>
+          </button>
+        </div>
+
+
+        <!-- Body -->
+      <div class="p-4 md:p-5 space-y-4">
+
+        <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-6">
+
+
+
+
+
+            <div role="status"
+              class="relative  product_skeleton hidden relative max-w-md p-4 space-y-4 border border-gray-200 divide-y divide-gray-200 rounded-sm shadow-sm animate-pulse dark:divide-gray-700 md:p-6 dark:border-gray-700">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                  <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+              </div>
+              <div class="flex items-center justify-between pt-4">
+                <div>
+                  <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                  <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+              </div>
+              <div class="flex items-center justify-between pt-4">
+                <div>
+                  <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                  <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+              </div>
+              <div class="flex items-center justify-between pt-4">
+                <div>
+                  <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                  <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+              </div>
+              <div class="flex items-center justify-between pt-4">
+                <div>
+                  <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                  <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                </div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+              </div>
+              <span class="sr-only">Loading...</span>
+              <div role="status" class="absolute -translate-x-1/2 -translate-y-1/2 top-2/4 left-1/2">
+                <svg aria-hidden="true" class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-red-600"
+                  viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                    fill="currentColor" />
+                  <path
+                    d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                    fill="currentFill" />
+                </svg>
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+
+
+          <div class="space-y-2 product-detail">
+            <img width="120" class="rounded-lg mx-auto" id="modal-product-image2" 
+
+            <dl class="flex justify-between">
+              <dt class="text-gray-500">Product Type</dt>
+              <dd id="modal-brand" class="font-medium"></dd>
+            </dl>
+
+            <dl class="flex justify-between">
+              <dt class="text-gray-500">Product</dt>
+              <dd id="modal-product-name" class="font-medium"></dd>
+            </dl>
+
+            <dl class="flex justify-between">
+              <dt class="text-gray-500">Purchase Price</dt>
+              <dd id="modal-buy-price" class="font-medium"></dd>
+            </dl>
+
+            <dl class="flex justify-between">
+              <dt class="text-gray-500">Selling Price</dt>
+              <dd id="modal-sell-price" class="font-medium text-green-600"></dd>
+            </dl>
+
+
+          </div>
+
+          <dl class="flex justify-between border-t pt-2">
+            <dt class="font-bold text-green-600">Profit</dt>
+            <dd id="modal-profit" class="font-bold text-green-600"></dd>
+          </dl>
+
+          <!-- Progress -->
+          <div>
+            <div class="flex justify-between font-bold">
+              <span>Progress</span>
+              <span id="modal-progress-percent"></span>
+            </div>
+
+            <div class="mt-2 w-full border p-1 rounded">
+              <div id="modal-progress-bar" class="h-1.5 bg-green-500 rounded"></div>
+            </div>
+          </div>
+
+        </div>
+
+    <div class="flex items-start mb-6">
+        <label for="remember" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-500">
+          By clicking the "Order Now" button, you agree to the site's policy and terms.
+        </label>
+    </div>
+
+
+        <button onclick="buyProduct()" data-product-id=""
+          class="mt-4 mx-auto block text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5">
+          Order Now
+        </button>
+      </div>
+
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+  const view_product_ajax = "{% url 'products:view_product_ajax' %}"
+  const buy_product_ajax = "{% url 'products:buy_product_ajax' %}"
+  const view_products_ajax = "{% url 'products:view_products_ajax' %}"
+</script>
+<script src='{% static "js/products.js" %}'></script>
+
+
+
+
+{% endblock %}
+

@@ -1,0 +1,55 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+      <div class="flex items-center justify-between p-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">خيارات السؤال</h2>
+          <p class="text-sm text-gray-500">{{ question.text }}</p>
+        </div>
+        <a href="{% url 'management:survey_option_add' question.id %}" class="px-4 py-2 text-sm font-medium text-white bg-primary-700 rounded-lg hover:bg-primary-800">
+          إضافة خيار
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th class="px-4 py-3">النص</th>
+              <th class="px-4 py-3">القيمة</th>
+              <th class="px-4 py-3">الترتيب</th>
+              <th class="px-4 py-3"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for opt in options %}
+            <tr class="border-b dark:border-gray-700">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ opt.text }}</td>
+              <td class="px-4 py-3">{{ opt.value|default:"-" }}</td>
+              <td class="px-4 py-3">{{ opt.order }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <a href="{% url 'management:survey_option_edit' opt.id %}" class="text-blue-600 hover:underline text-sm">تعديل</a>
+                  <form method="post" action="{% url 'management:survey_option_delete' opt.id %}" onsubmit="return confirm('حذف الخيار؟');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:underline text-sm">حذف</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" class="px-4 py-6 text-center text-gray-500">لا توجد خيارات.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="p-4">
+        <a href="{% url 'management:survey_questions' %}" class="text-blue-600 hover:underline text-sm">رجوع للأسئلة</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

@@ -1,0 +1,2 @@
+npx tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css --minify
+npx terser node_modules/flowbite/dist/flowbite.js -o static/js/flowbite.min.js --compress --mangle

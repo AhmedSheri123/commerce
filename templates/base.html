@@ -1,0 +1,80 @@
+{% load static %}
+<!doctype html>
+<html lang="en" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Commerce{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'home/style.css' %}">
+
+    {% comment %} <script src="https://cdn.tailwindcss.com"></script> {% endcomment %}
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    {% comment %} <link href="{% static "css/flowbite.min.css" %}" rel="stylesheet" /> {% endcomment %}
+
+
+
+
+
+  </head>
+  <body class="min-h-screen bg-slate-50 relative">
+
+<style>
+.goog-logo-link,
+.goog-te-gadget span {
+  display: none !important;
+}
+.skiptranslate.goog-te-gadget{
+  display: block !important;
+}
+.skiptranslate.goog-te-gadget select{
+  width: 100%;
+  padding: 10px 2px;
+  border: solid 1px rgb(82, 82, 82);
+  border-radius: 15px;
+  
+}
+.skiptranslate, .skiptranslate.goog-te-gadget span{
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+</style>
+
+    <div class="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:40px_40px] opacity-40"></div>
+
+    {% comment %} {% include 'parts/navbar.html' %} {% endcomment %}
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+    {% if request.user.is_authenticated %}
+    {% include 'parts/footer.html' %}
+    {% endif %}
+    {% include 'parts/active_fab.html' %}
+    {% include 'parts/support_fab.html' %}
+
+
+    <!-- tocast messages -->
+    {% include 'parts/messages.html' %}
+
+
+
+<script src="{% static "js/flowbite.min.js" %}"></script>
+<script src="{% static "js/main.js" %}"></script>
+
+
+
+
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+
+
+
+
+
+
+
+  </body>
+</html>

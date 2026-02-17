@@ -1,0 +1,56 @@
+
+<div class="fixed end-5 top-5 z-50 tocast-box">
+
+{% for message in messages %}
+  <div class="flex items-center w-full max-w-xs p-4 rounded-base shadow-xs border
+    {% if message.level_tag == 'success' %} bg-green-100 text-green-800 border-green-300
+    {% elif message.level_tag == 'error' %} bg-red-100 text-red-800 border-red-300
+    {% elif message.level_tag == 'warning' %} bg-yellow-100 text-yellow-800 border-yellow-300
+    {% elif message.level_tag == 'info' %} bg-blue-100 text-blue-800 border-blue-300
+    {% else %} bg-gray-100 text-gray-800 border-gray-300
+    {% endif %}
+  " role="alert">
+
+    <!-- Icon -->
+    <div class="inline-flex items-center justify-center shrink-0 w-7 h-7 rounded
+      {% if message.level_tag == 'success' %} bg-green-200 text-green-700
+      {% elif message.level_tag == 'error' %} bg-red-200 text-red-700
+      {% elif message.level_tag == 'warning' %} bg-yellow-200 text-yellow-700
+      {% elif message.level_tag == 'info' %} bg-blue-200 text-blue-700
+      {% else %} bg-gray-200 text-gray-700
+      {% endif %}
+    ">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5 11.917 9.724 16.5 19 7.5"/>
+      </svg>
+    </div>
+
+    <!-- Message -->
+    <div class="ms-3 text-sm font-normal">
+      {{ message }}
+    </div>
+
+    <!-- Close Button -->
+    <button type="button"
+      class="ms-auto flex items-center justify-center h-8 w-8 rounded hover:bg-gray-200"
+      onclick="this.parentElement.remove()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M6 18 18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+  </div>
+{% endfor %}
+</div>
+
+<style>
+.toast-hide {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.5s ease;
+}
+</style>

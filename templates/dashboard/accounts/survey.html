@@ -1,0 +1,65 @@
+﻿{% extends "base.html" %}
+{% load survey_extras %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-6 ">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+    <h2 class="text-xl font-semibold text-slate-800 mb-2">Registration Questions</h2>
+    <p class="text-sm text-slate-500 mb-6">Please answer the following questions to create an experience that matches your knowledge.</p>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+      {% for q in questions %}
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-slate-700">{{ q.text }}</label>
+
+          {% if q.field_type == 'single' %}
+            <div class="space-y-2">
+              {% for opt in q.options.all %}
+                <label class="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="radio" name="q_{{ q.id }}" value="{{ opt.id }}" class="w-4 h-4 border-2 border-solid">
+                  <span>{{ opt.text }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% elif q.field_type == 'multi' %}
+            <div class="space-y-2">
+              {% for opt in q.options.all %}
+                <label class="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" name="q_{{ q.id }}" value="{{ opt.id }}" class="w-4 h-4 border-2 border-solid">
+                  <span>{{ opt.text }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% elif q.field_type == 'boolean' %}
+            <div class="flex gap-4 text-sm text-slate-700">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="q_{{ q.id }}" value="yes" class="w-4 h-4 border-2 border-solid">
+                <span>Yes</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="q_{{ q.id }}" value="no" class="w-4 h-4 border-2 border-solid">
+                <span>No</span>
+              </label>
+            </div>
+          {% elif q.field_type == 'number' %}
+            <input type="number" name="q_{{ q.id }}" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm border-2 border-solid">
+          {% else %}
+            <input type="text" name="q_{{ q.id }}" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm border-2 border-solid">
+          {% endif %}
+
+          {% if errors|get_item:q.id %}
+            <p class="text-sm text-red-600">{{ errors|get_item:q.id }}</p>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p class="text-sm text-slate-600">No questions currently available.</p>
+      {% endfor %}
+
+      <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+        Save Answers
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock content %}
+

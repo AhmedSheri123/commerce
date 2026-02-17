@@ -1,0 +1,128 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commerce — Home{% endblock %}
+
+{% block content %}
+
+<div class="mx-auto min-h-screen bg-white">
+
+<div
+  class="group relative overflow-hidden bg-white p-6 font-sans border border-slate-200 shadow-sm"
+>
+  <!-- Glow -->
+  <div
+    class="absolute -top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl transition-all duration-700 group-hover:bg-blue-500/20"
+  ></div>
+
+  <div class="relative flex flex-col gap-5">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between border-b border-slate-200 pb-5">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-blue-600"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            fill="none"
+          >
+            <path d="M3 12m0 1h4v7H3zM9 8h4v11H9zM15 4h4v15h-4zM4 20h14"/>
+          </svg>
+        </div>
+        <div>
+          <p class="font-semibold text-slate-800">Overview</p>
+          <p class="text-xs text-slate-500">Updated recently</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 1 -->
+    <div class="flex divide-x divide-slate-200">
+      <div class="flex-1 pr-6">
+        <p class="text-xs font-medium text-slate-500">Balance</p>
+        <p class="text-xl font-semibold text-slate-800">
+          ${{user.profile.balance|floatformat:2}}
+        </p>
+        <p class="mt-1 text-xs font-medium text-emerald-500">Open</p>
+      </div>
+      <div class="flex-1 pl-6">
+        <p class="text-xs font-medium text-slate-500">Earnings</p>
+        <p class="text-xl font-semibold text-slate-800">
+          ${{total_earned|floatformat:2}}
+        </p>
+        <p class="mt-1 text-xs font-medium text-emerald-500">Open</p>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="flex divide-x divide-slate-200">
+      <div class="flex-1 pr-6">
+        <p class="text-xs font-medium text-slate-500">Remaining Tasks</p>
+        <p class="text-xl font-semibold text-slate-800">
+          {{remaining_products}}
+        </p>
+        <p class="mt-1 text-xs font-medium text-slate-400">
+          of {{all_products}}
+        </p>
+      </div>
+      <div class="flex-1 pl-6">
+        <p class="text-xs font-medium text-slate-500">Completed Tasks</p>
+        <p class="text-xl font-semibold text-slate-800">
+          {{completed_products}}
+        </p>
+        <p class="mt-1 text-xs font-medium text-red-500">
+          of {{all_products}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div>
+      <div class="flex justify-between text-sm font-medium text-slate-700">
+        <span>Task Completion Rate</span>
+        <span>{{user_progress.progress_percentage}}%</span>
+      </div>
+
+      <div class="mt-2 h-3 w-full rounded-full bg-slate-200">
+        <div
+          class="h-3 rounded-full bg-emerald-500 transition-all"
+          style="width: {{user_progress.progress_percentage}}%"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Button -->
+    <div class="border-t border-slate-200 pt-5 text-center">
+      <a href="{% url 'products:products' %}"
+        class="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+      >
+        Request a New Product
+    </a>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+      <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center lazy-video">
+          <source src="{% static 'img/ezgif-4de2564cedf63f295.mp4' %}" type="video/webm" >
+          
+          <!-- Fallback text for browsers that do not support the video tag -->
+          Your browser does not support the video tag.
+      </video>
+
+
+</div>
+
+
+{% endblock %}
+

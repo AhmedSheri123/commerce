@@ -1,0 +1,54 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+      <div class="flex items-center justify-between p-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">أسئلة الاستبيان</h2>
+        <a href="{% url 'management:survey_question_add' %}" class="px-4 py-2 text-sm font-medium text-white bg-primary-700 rounded-lg hover:bg-primary-800">
+          إضافة سؤال
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th class="px-4 py-3">السؤال</th>
+              <th class="px-4 py-3">النوع</th>
+              <th class="px-4 py-3">إجباري</th>
+              <th class="px-4 py-3">مفعل</th>
+              <th class="px-4 py-3">الترتيب</th>
+              <th class="px-4 py-3"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in questions %}
+            <tr class="border-b dark:border-gray-700">
+              <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ q.text }}</td>
+              <td class="px-4 py-3">{{ q.get_field_type_display }}</td>
+              <td class="px-4 py-3">{{ q.is_required|yesno:"نعم,لا" }}</td>
+              <td class="px-4 py-3">{{ q.is_active|yesno:"نعم,لا" }}</td>
+              <td class="px-4 py-3">{{ q.order }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  <a href="{% url 'management:survey_options' q.id %}" class="text-indigo-600 hover:underline text-sm">الخيارات</a>
+                  <a href="{% url 'management:survey_question_edit' q.id %}" class="text-blue-600 hover:underline text-sm">تعديل</a>
+                  <form method="post" action="{% url 'management:survey_question_delete' q.id %}" onsubmit="return confirm('حذف السؤال؟');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:underline text-sm">حذف</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="px-4 py-6 text-center text-gray-500">لا توجد أسئلة.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

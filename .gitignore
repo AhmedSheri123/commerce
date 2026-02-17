@@ -1,0 +1,45 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Django migrations (يمكن رفعها إذا أردت)
+*/migrations/*.py[cod]
+*/migrations/__pycache__/
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# Media / uploaded files
+media/
+staticfiles/
+
+# Logs
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node / Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Secrets / dotenv
+.env

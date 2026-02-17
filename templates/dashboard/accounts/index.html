@@ -1,0 +1,443 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Commerce — Home{% endblock %}
+
+{% block content %}
+
+<div class="max-w-md mx-auto min-h-screen flex flex-col ">
+
+  <!-- 🔹 Card -->
+  <div class="p-4">
+    <div class="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-sm border border-slate-200">
+
+  <!-- User -->
+  <div class="flex items-center gap-4">
+
+    <!-- Avatar -->
+    <div class="relative">
+      <!-- <div class="h-14 w-14 overflow-hidden rounded-full bg-slate-100 flex items-center justify-center">
+        {% if user.profile.img_base64 %}
+          <img
+            src="{{ user.profile.avatar.url }}"
+            alt="Avatar"
+            class="h-full w-full object-cover"
+          >
+        {% else %}
+          <svg class="h-7 w-7 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        {% endif %}
+      </div> -->
+
+      <!-- 
+      <button
+        class="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/>
+        </svg>
+      </button> -->
+    </div>
+
+    <!-- User Information -->
+    <div class="space-y-0.5">
+<div class="flex items-center gap-2 text-slate-800">
+  <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M3 5a2 2 0 012-2h3l2 5-3 2a11 11 0 005 5l2-3 5 2v3a2 2 0 01-2 2h-1C8.82 20 4 15.18 4 9V5z"/>
+  </svg>
+
+  <span class="font-semibold">{{ user.username }}</span>
+  
+
+</div>
+
+
+      <div class="text-xs text-slate-500 flex items-center gap-2">
+        ID:
+        <span class="font-medium text-slate-700">
+          {{ user.profile.uid }}
+        </span>
+
+  {% if request.user.profile.is_enabled %}
+  <!-- Verified Badge -->
+  <div
+    class="flex items-center gap-1 rounded-full bg-green-500 px-2 py-0.5"
+  >
+    <svg
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      fill="none"
+      class="h-3.5 w-3.5 text-white"
+    >
+      <path
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        stroke-width="2"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+    <span class="text-[11px] font-medium text-white">Active</span>
+  </div>
+  {% else %}
+<div class="ml-auto">
+  <div
+    class="flex items-center gap-1 rounded-full bg-red-500 px-3 py-1"
+  >
+    <svg
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      fill="none"
+      class="h-4 w-4 text-white"
+    >
+      <path
+        d="M6 18L18 6M6 6l12 12"
+        stroke-width="2"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+    <span class="text-xs font-medium text-white">Inactive</span>
+  </div>
+</div>
+
+  {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Balance -->
+  <div class="text-right">
+    <p class="text-xs text-slate-500 mb-1">Balance</p>
+    <div class="flex items-baseline gap-1 font-bold text-slate-900">
+      <span class="text-2xl">{{request.user.profile.balance|floatformat:0}}</span>
+      <span class="text-sm text-slate-500">$</span>
+    </div>
+  </div>
+
+</div>
+
+
+    <!-- 🔹 Actions -->
+    <div class="mt-4 flex gap-4">
+      <a href="{% url 'accounts:deposit' %}" class="flex-1 py-3 rounded-xl bg-gray-200 text-gray-700 font-medium text-center">
+        Deposit
+      </a>
+
+      <a href="{% url 'accounts:transactions' %}" class="flex-1 py-3 rounded-xl bg-blue-100 text-blue-600 font-medium flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 10l5 5 5-5"/>
+        </svg>
+        Withdraw
+      </a>
+
+    </div>
+
+  </div>
+
+
+    {% if request.user.is_superuser %}
+        <a href="{% url 'management:index' %}"
+      class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 
+            font-medium rounded-md px-2 py-3 text-center mx-4"
+      type="button">
+      Admin
+    </a>
+    {% endif %}
+  <!-- 🔹 Quick Actions -->
+  <div class="px-4 mt-5">
+    <h2 class="text-lg font-semibold mb-4">Quick Actions</h2>
+
+    <div class="grid grid-cols-3 gap-4 text-center">
+
+      <!-- Wallet -->
+<a class="bg-white p-4 rounded-2xl shadow" href="{% url 'accounts:deposit' %}">
+<svg id='Wallet_32' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='32' height='32' stroke='none' fill='#000000' opacity='0'/>
+
+
+<g transform="matrix(1.1 0 0 1.1 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 -3 -11)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(182,220,254); fill-rule: nonzero; opacity: 1;" transform=" translate(-17, -9)" d="M 6 13.5 L 6 12.5 L 5.5 12.5 C 3.294 12.5 1.5 10.706 1.5 8.5 C 1.5 6.2940000000000005 3.294 4.5 5.5 4.5 L 32.5 4.5 L 32.5 13.5 L 6 13.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -3 -11)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-17, -9)" d="M 32 5 L 32 13 L 6.5 13 L 6.5 12 L 5.5 12 C 3.57 12 2 10.43 2 8.5 C 2 6.57 3.57 5 5.5 5 L 32 5 M 33 4 L 5.5 4 C 3.015 4 1 6.015 1 8.5 C 1 10.985 3.015 13 5.5 13 L 5.5 14 L 33 14 L 33 4 L 33 4 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0.5 -0.25)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(152,204,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-20.5, -19.75)" d="M 5.5 8 L 35.5 8 L 35.5 31.5 L 5.5 31.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0.5 -0.5)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-20.5, -19.5)" d="M 35 8 L 35 31 L 6 31 L 6 8 L 35 8 M 36 7 L 5 7 L 5 32 L 36 32 L 36 7 L 36 7 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -4 -1)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-16, -19)" d="M 6 28 L 6 10 L 17 10 C 21.963 10 26 14.038 26 19 C 26 23.962 21.963 28 17 28 L 6 28 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -3 2.25)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(223,240,254); fill-rule: nonzero; opacity: 1;" transform=" translate(-17, -22.25)" d="M 6 35.5 C 3.519 35.5 1.5 33.481 1.5 31 L 1.5 9 L 1.531 9 C 1.778 10.97 3.464 12.5 5.5 12.5 L 32.5 12.5 L 32.5 35.5 L 6 35.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -3 2.25)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-17, -22.25)" d="M 2 11.325 C 2.826 12.346 4.088 13 5.5 13 L 32 13 L 32 35 L 6 35 C 3.794 35 2 33.206 2 31 L 2 16 L 2 12 L 2 11.325 M 2 8.5 L 1 8.5 L 1 12 L 1 16 L 1 31 C 1 33.761 3.239 36 6 36 L 33 36 L 33 12 L 5.5 12 C 3.567 12 2 10.433 2 8.5 L 2 8.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 12 4)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(223,240,254); fill-rule: nonzero; opacity: 1;" transform=" translate(-32, -24)" d="M 25.5 20.5 L 38.5 20.5 L 38.5 27.5 L 25.5 27.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 12 4)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-32, -24)" d="M 38 21 L 38 27 L 26 27 L 26 21 L 38 21 M 39 20 L 25 20 L 25 28 L 39 28 L 39 20 L 39 20 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 10 4)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-30, -24)" d="M 30 23 C 29.447715250169207 23 29 23.447715250169207 29 24 C 29 24.552284749830793 29.447715250169207 25 30 25 C 30.552284749830793 25 31 24.552284749830793 31 24 C 31 23.447715250169207 30.552284749830793 23 30 23 Z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+  <p class="mt-2 text-sm">Wallet</p>
+</a>
+
+      <!-- Password -->
+      <button command="show-modal" commandfor="dialog" class="bg-white p-4 rounded-2xl shadow">
+<svg id='Password_48' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='48' height='48' stroke='none' fill='#000000' opacity='0'/>
+
+
+<g transform="matrix(1.1 0 0 1.1 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 0 -10.14)" >
+<path style="stroke: rgb(71,136,199); stroke-width: 2; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -9.86)" d="M 30 17.714 C 30 17.714 30 12.407999999999998 30 11.999999999999998 C 30 6.4769999999999985 25.523 1.9999999999999982 20 1.9999999999999982 C 14.477 1.9999999999999982 10 6.477 10 12 C 10 12.408 10 17.714 10 17.714" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 6.5)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(152,204,253); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -26.5)" d="M 2.5 37.5 L 2.5 19 C 2.5 17.07 4.07 15.5 6 15.5 L 34 15.5 C 35.93 15.5 37.5 17.07 37.5 19 L 37.5 37.5 L 2.5 37.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 6.5)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -26.5)" d="M 34 16 C 35.653999999999996 16 37 17.346 37 19 L 37 37 L 3 37 L 3 19 C 3 17.346 4.346 16 6 16 L 34 16 M 34 15 L 6 15 C 3.791 15 2 16.791 2 19 L 2 38 L 38 38 L 38 19 C 38 16.791 36.209 15 34 15 L 34 15 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 7)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -27)" d="M 14 27 C 14 28.133 13.133 29 12 29 C 10.867 29 10 28.133 10 27 C 10 25.867 10.867 25 12 25 C 13.133 25 14 25.867 14 27 z M 28 25 C 26.867 25 26 25.867 26 27 C 26 28.133 26.867 29 28 29 C 29.133 29 30 28.133 30 27 C 30 25.867 29.133 25 28 25 z M 20 25 C 18.867 25 18 25.867 18 27 C 18 28.133 18.867 29 20 29 C 21.133 29 22 28.133 22 27 C 22 25.867 21.133 25 20 25 z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+        <p class="mt-2 text-sm">Change Password</p>
+</button>
+
+      <!-- Login -->
+      <a class="bg-white p-4 rounded-2xl shadow relative " href="{% url 'accounts:notifications' %}">
+
+
+<svg id='Notification_48' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='48' height='48' stroke='none' fill='#000000' opacity='0'/>
+
+
+<g transform="matrix(1.1 0 0 1.1 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 0 15)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(182,220,254); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -35)" d="M 20 31.5 C 18.067003375592222 31.5 16.5 33.06700337559222 16.5 35 C 16.5 36.93299662440778 18.067003375592222 38.5 20 38.5 C 21.932996624407778 38.5 23.5 36.93299662440778 23.5 35 C 23.5 33.06700337559222 21.932996624407778 31.5 20 31.5 Z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 15)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -35)" d="M 20 32 C 21.654 32 23 33.346000000000004 23 35 C 23 36.653999999999996 21.654 38 20 38 C 18.346 38 17 36.653999999999996 17 35 C 17 33.346000000000004 18.346 32 20 32 M 20 31 C 17.791 31 16 32.791 16 35 C 16 37.209 17.791 39 20 39 C 22.209 39 24 37.209 24 35 C 24 32.791 22.209 31 20 31 L 20 31 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 -2)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(223,240,254); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -18)" d="M 5.5 34.5 L 5.5 31.472 C 7.747 31.222 9.5 29.312 9.5 27 L 9.5 15 C 9.5 10.33 12.64 6.179 17.136 4.906000000000001 L 17.5 4.803 L 17.5 4 C 17.5 2.622 18.622 1.5 20 1.5 C 21.378 1.5 22.5 2.622 22.5 4 L 22.5 4.803 L 22.864 4.906 C 27.36 6.179 30.5 10.33 30.5 15 L 30.5 27 C 30.5 29.313 32.253 31.223 34.5 31.472 L 34.5 34.5 L 5.5 34.5 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 -2)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(71,136,199); fill-rule: nonzero; opacity: 1;" transform=" translate(-20, -18)" d="M 20 2 C 21.103 2 22 2.8970000000000002 22 4 L 22 4.425 L 22 5.181 L 22.727 5.3870000000000005 C 27.009 6.6 30 10.553 30 15 L 30 27 C 30 29.415 31.721 31.435 34 31.9 L 34 34 L 6 34 L 6 31.9 C 8.279 31.435 10 29.415 10 27 L 10 15 C 10 10.553 12.991 6.6 17.273 5.3870000000000005 L 18 5.181 L 18 4.425 L 18 4 C 18 2.897 18.897 2 20 2 M 20 1 C 18.343 1 17 2.343 17 4 C 17 4.099 17 4.253 17 4.425 C 12.385 5.732 9 9.966 9 15 L 9 27 C 9 29.209 7.209 31 5 31 L 5 35 L 35 35 L 35 31 C 32.791 31 31 29.209 31 27 L 31 15 C 31 9.966000000000001 27.615000000000002 5.731999999999999 23 4.425000000000001 C 23 4.253 23 4.099 23 4 C 23 2.343 21.657 1 20 1 L 20 1 z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+        <p class="mt-2 text-sm">Notifications</p>
+      <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+        {{ unread_count|default:0 }} unread
+      </span>
+
+
+  <span class="sr-only">Notifications</span>
+    <div class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{ unread_count|default:0 }}</div>
+
+
+</a>
+
+      <!-- Logout -->
+      <a href="{% url 'accounts:logout' %}" class="bg-white p-4 rounded-2xl shadow">
+<svg id='Sign_Out_48' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='48' height='48' stroke='none' fill='#000000' opacity='0'/>
+
+
+<g transform="matrix(0.92 0 0 0.92 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 0 0)" >
+<linearGradient id="SVGID_aPEKFPi6orYUi5V2TMQLza_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="9.858" y1="9.858" x2="38.142" y2="38.142">
+<stop offset="0%" style="stop-color:rgb(51,190,240);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(10,133,217);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_aPEKFPi6orYUi5V2TMQLza_1); fill-rule: nonzero; opacity: 1;" transform=" translate(-24, -24)" d="M 44 24 C 44 35.045 35.045 44 24 44 C 12.954999999999998 44 4 35.045 4 24 C 4 12.954999999999998 12.955 4 24 4 C 35.045 4 44 12.955 44 24 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 7.25 0.03)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 0.05;" transform=" translate(-31.25, -24.03)" d="M 42.859 22.445 L 35.915 15.501000000000001 C 34.582 14.168 33 15.125 33 16.708 L 33 20 L 21 20 C 19.897 20 19 20.897 19 22 L 19 26 C 19 27.103 19.897 28 21 28 L 33 28 L 33 31.292 C 33 33.25 34.645 33.77 35.915 32.5 L 42.859 25.556 C 43.716 24.698 43.716 23.302 42.859 22.445 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 7.25 0.01)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 0.07;" transform=" translate(-31.25, -24.01)" d="M 42.506 22.799 L 35.562 15.855 C 34.672 14.965 33.5 15.602 33.5 16.709 L 33.5 20.5 L 21 20.5 C 20.173000000000002 20.5 19.5 21.172 19.5 22 L 19.5 26 C 19.5 26.828 20.173000000000002 27.5 21 27.5 L 33.5 27.5 L 33.5 31.291 C 33.5 32.586 34.703 33.003 35.562 32.145 L 42.506 25.201000000000004 C 43.168 24.539 43.168 23.461 42.506 22.799 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 7.25 0)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-31.25, -24)" d="M 42.152 23.152 L 35.208 16.208000000000002 C 34.762 15.762000000000002 34 16.078000000000003 34 16.708000000000002 L 34 21 L 21 21 C 20.448 21 20 21.448 20 22 L 20 26 C 20 26.552 20.448 27 21 27 L 34 27 L 34 31.291 C 34 31.922 34.762 32.237 35.208 31.791 L 42.152 24.847 C 42.62 24.38 42.62 23.62 42.152 23.152 z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+        <p class="mt-2 text-sm">Log Out</p>
+</a>
+
+      <!-- Language -->
+      <div class="bg-white p-4 rounded-2xl shadow">
+
+<svg id='Language_48' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='48' height='48' stroke='none' fill='#000000' opacity='0'/>
+
+
+<g transform="matrix(0.92 0 0 0.92 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 7.5 -1)" >
+<linearGradient id="SVGID_gCW9sGJUkBnBLRc40wQXGa_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="25.447" y1="4.921" x2="44.728" y2="36.29">
+<stop offset="0%" style="stop-color:rgb(66,163,242);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(66,164,235);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_gCW9sGJUkBnBLRc40wQXGa_1); fill-rule: nonzero; opacity: 1;" transform=" translate(-31.5, -23)" d="M 42 8 L 19 8 L 30 38 L 42 38 C 43.105 38 44 37.105 44 36 L 44 10 C 44 8.895 43.105 8 42 8 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -7 3.5)" >
+<linearGradient id="SVGID_gCW9sGJUkBnBLRc40wQXGb_2" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="3.865" y1="9.86" x2="23.412" y2="41.663">
+<stop offset="0%" style="stop-color:rgb(29,89,179);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(25,91,188);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_gCW9sGJUkBnBLRc40wQXGb_2); fill-rule: nonzero; opacity: 1;" transform=" translate(-17, -27.5)" d="M 19 8 L 6 8 C 4.895 8 4 8.895 4 10 L 4 36 C 4 37.105 4.895 38 6 38 L 14 38 L 14 45.998 C 14 46.888999999999996 15.077 47.335 15.707 46.705 L 24.412 38 L 30 38 L 19 8 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -9 2)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-15, -26)" d="M 12 25 L 18 25 L 18 27 L 12 27 L 12 25 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 -8.99 -1)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-15.01, -23)" d="M 12.109 29 L 15 20 L 17.906 29 L 20.016 29 L 16 17 L 14 17 L 10 29 L 12.109 29 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 9.93 -0.45)" >
+<linearGradient id="SVGID_gCW9sGJUkBnBLRc40wQXGc_3" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="29.064" y1="23.554" x2="38.79" y2="23.554">
+<stop offset="0%" style="stop-color:rgb(17,64,138);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(16,63,143);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_gCW9sGJUkBnBLRc40wQXGc_3); fill-rule: nonzero; opacity: 1;" transform=" translate(-33.93, -23.55)" d="M 29.064 27.223 C 29.125 27.192 34.058 24.003999999999998 37 18.107999999999997 L 38.79 19 C 35.708 25.25 31.333 28.292 30.281 29 L 29.064 27.223 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 10 -0.5)" >
+<linearGradient id="SVGID_gCW9sGJUkBnBLRc40wQXGd_4" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="28" y1="23.5" x2="40" y2="23.5">
+<stop offset="0%" style="stop-color:rgb(17,64,138);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(16,63,143);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_gCW9sGJUkBnBLRc40wQXGd_4); fill-rule: nonzero; opacity: 1;" transform=" translate(-34, -23.5)" d="M 38 29 C 38 29 33 26.417 30.231 22.002 L 32 21 C 34.333 24.833 38.981 27.259999999999998 38.981 27.259999999999998 L 38 29 z M 28 18 L 40 18 L 40 20 L 28 20 L 28 18 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 10 -6)" >
+<linearGradient id="SVGID_gCW9sGJUkBnBLRc40wQXGe_5" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)" x1="33" y1="18" x2="35" y2="18">
+<stop offset="0%" style="stop-color:rgb(17,64,138);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(16,63,143);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_gCW9sGJUkBnBLRc40wQXGe_5); fill-rule: nonzero; opacity: 1;" transform=" translate(-34, -18)" d="M 33 16 L 35 16 L 35 20 L 33 20 L 33 16 z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+        <!-- <p class="mt-2 text-sm">Language</p> -->
+        <div id="google_translate_element"></div>
+      </div>
+
+      <!-- Invite -->
+      <a href="{% url 'accounts:referral_dashboard' %}" class="bg-white p-4 rounded-2xl shadow">
+<svg id='Money_Bag_48' class="mx-auto" width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='48' height='48' stroke='none' fill='#000000' opacity='0'/>
+
+
+
+<g transform="matrix(0.92 0 0 0.92 24 24)" >
+<g style="" >
+<g transform="matrix(1 0 0 1 0 -16)" >
+<linearGradient id="SVGID_vLMwOwjn4I~51PnzCmZJia_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 -290)" x1="24" y1="-294.147" x2="24" y2="-302.179">
+<stop offset="0%" style="stop-color:rgb(1,118,208);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(22,83,140);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_vLMwOwjn4I~51PnzCmZJia_1); fill-rule: nonzero; opacity: 1;" transform=" translate(-24, -8)" d="M 24 4 C 20 4 20 6 16 6 C 16 9 18 8 18 12 L 30 12 C 30 8 32 9 32 6 C 28 6 28 4 24 4 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 2)" >
+<linearGradient id="SVGID_vLMwOwjn4I~51PnzCmZJib_2" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 -1 0 -290)" x1="8.397" y1="-303.26" x2="35.767" y2="-330.63">
+<stop offset="0%" style="stop-color:rgb(1,118,208);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(22,83,140);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_vLMwOwjn4I~51PnzCmZJib_2); fill-rule: nonzero; opacity: 1;" transform=" translate(-24, -26)" d="M 41 31 C 41 40.388999999999996 33.389 41 24 41 C 14.610999999999997 41 7 40.389 7 31 C 7 21.610999999999997 14.611 11 24 11 C 33.388999999999996 11 41 21.611 41 31 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 -12)" >
+<line style="stroke: rgb(143,151,158); stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;" x1="-6" y1="0" x2="6" y2="0" />
+</g>
+<g transform="matrix(1 0 0 1 0 2.49)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 0.05;" transform=" translate(-24, -26.49)" d="M 19.734 35.021 C 18.840000000000003 35.021 18.113000000000003 34.293 18.113000000000003 33.4 L 18.113000000000003 32.12 C 18.113000000000003 31.406999999999996 18.569000000000003 30.785999999999998 19.247000000000003 30.573999999999998 C 19.935000000000002 30.355999999999998 20.180000000000003 29.983999999999998 20.180000000000003 29.153999999999996 L 20.180000000000003 29.001999999999995 L 19.934000000000005 29.001999999999995 C 19.040000000000006 29.001999999999995 18.313000000000006 28.273999999999994 18.313000000000006 27.380999999999997 L 18.313000000000006 26.043999999999997 C 18.313000000000006 25.15 19.041000000000007 24.423999999999996 19.934000000000005 24.423999999999996 L 20.180000000000003 24.423999999999996 L 20.180000000000003 23.636999999999997 C 20.180000000000003 22.038999999999998 20.669000000000004 20.690999999999995 21.633000000000003 19.627999999999997 C 22.640000000000004 18.519999999999996 23.944000000000003 17.958 25.507 17.958 C 26.463 17.958 27.357000000000003 18.133 28.162000000000003 18.477999999999998 C 28.762000000000004 18.737 29.147000000000002 19.322 29.147000000000002 19.968999999999998 L 29.147000000000002 21.438 C 29.147000000000002 22.015 28.836000000000002 22.552 28.337000000000003 22.84 C 28.096000000000004 22.982 27.814000000000004 23.059 27.526000000000003 23.059 C 27.244000000000003 23.059 26.966000000000005 22.985 26.722000000000005 22.845000000000002 C 26.335000000000004 22.626 25.943000000000005 22.519000000000002 25.524000000000004 22.519000000000002 C 25.279000000000003 22.519000000000002 24.974000000000004 22.519000000000002 24.974000000000004 23.807000000000002 L 24.974000000000004 24.423000000000002 L 26.159000000000002 24.423000000000002 C 27.053 24.423000000000002 27.78 25.150000000000002 27.78 26.043000000000003 L 27.78 27.380000000000003 C 27.78 28.274 27.052 29.001 26.159000000000002 29.001 L 24.973000000000003 29.001 C 24.962000000000003 29.516000000000002 24.898000000000003 30.001 24.779000000000003 30.451 L 28.264000000000003 30.451 C 28.699 30.451 29.106 30.621000000000002 29.412000000000003 30.929000000000002 C 29.718000000000004 31.235000000000003 29.886000000000003 31.643 29.885 32.076 L 29.885 33.4 C 29.885 34.294 29.157 35.021 28.264000000000003 35.021 L 19.734 35.021 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 2.49)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 0.07;" transform=" translate(-24, -26.49)" d="M 19.734 34.521 C 19.116000000000003 34.521 18.613000000000003 34.018 18.613000000000003 33.4 L 18.613000000000003 32.12 C 18.613000000000003 31.627999999999997 18.927000000000003 31.197999999999997 19.396000000000004 31.051999999999996 C 20.295000000000005 30.766999999999996 20.679000000000006 30.198999999999995 20.679000000000006 29.154999999999998 L 20.679000000000006 28.502999999999997 L 19.933000000000007 28.502999999999997 C 19.31500000000001 28.502999999999997 18.81200000000001 27.999999999999996 18.81200000000001 27.381999999999998 L 18.81200000000001 26.044999999999998 C 18.81200000000001 25.427999999999997 19.31500000000001 24.924999999999997 19.933000000000007 24.924999999999997 L 20.679000000000006 24.924999999999997 L 20.679000000000006 23.637999999999998 C 20.679000000000006 22.168 21.124000000000006 20.933 22.002000000000006 19.964999999999996 C 22.910000000000007 18.965999999999998 24.089000000000006 18.458999999999996 25.506000000000007 18.458999999999996 C 26.39400000000001 18.458999999999996 27.221000000000007 18.619999999999997 27.965000000000007 18.937999999999995 C 28.37900000000001 19.116999999999994 28.647000000000006 19.520999999999994 28.647000000000006 19.968999999999994 L 28.647000000000006 21.437999999999995 C 28.647000000000006 21.835999999999995 28.433000000000007 22.207999999999995 28.087000000000007 22.406999999999996 C 27.920000000000005 22.505999999999997 27.72500000000001 22.558999999999997 27.526000000000007 22.558999999999997 C 27.332000000000008 22.558999999999997 27.139000000000006 22.508 26.970000000000006 22.412 C 26.505000000000006 22.148 26.032000000000007 22.019 25.524000000000004 22.019 C 25.131000000000004 22.019 24.474000000000004 22.019 24.474000000000004 23.807 L 24.474000000000004 24.923 L 26.159000000000002 24.923 C 26.777 24.923 27.28 25.426 27.28 26.043 L 27.28 27.38 C 27.28 27.997999999999998 26.777 28.500999999999998 26.159000000000002 28.500999999999998 L 24.474000000000004 28.500999999999998 L 24.474000000000004 28.858999999999998 C 24.474000000000004 29.639999999999997 24.342000000000002 30.34 24.079000000000004 30.950999999999997 L 28.264000000000003 30.950999999999997 C 28.564000000000004 30.950999999999997 28.846000000000004 31.067999999999998 29.058000000000003 31.280999999999995 C 29.270000000000003 31.492999999999995 29.386000000000003 31.774999999999995 29.385000000000005 32.074 L 29.385000000000005 33.4 C 29.385000000000005 34.018 28.882000000000005 34.521 28.264000000000006 34.521 L 19.734 34.521 z" stroke-linecap="round" />
+</g>
+<g transform="matrix(1 0 0 1 0 2.49)" >
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform=" translate(-24, -26.49)" d="M 28.266 31.451 L 23.226999999999997 31.451 C 23.724999999999998 30.766000000000002 23.975999999999996 29.899 23.975999999999996 28.859 L 23.975999999999996 28.001 L 26.160999999999994 28.001 C 26.503999999999994 28.001 26.781999999999993 27.723000000000003 26.781999999999993 27.380000000000003 L 26.781999999999993 26.043000000000003 C 26.781999999999993 25.700000000000003 26.503999999999994 25.422000000000004 26.160999999999994 25.422000000000004 L 23.975999999999996 25.422000000000004 L 23.975999999999996 23.806000000000004 C 23.975999999999996 21.517000000000003 25.061999999999994 21.517000000000003 25.525999999999996 21.517000000000003 C 26.121999999999996 21.517000000000003 26.675999999999995 21.667 27.218999999999998 21.975 C 27.412 22.084000000000003 27.647999999999996 22.084000000000003 27.839 21.972 C 28.031 21.861 28.148 21.657 28.148 21.436 L 28.148 19.968 C 28.148 19.719 28 19.495 27.771 19.396 C 27.09 19.106 26.328 18.957 25.508000000000003 18.957 C 24.237000000000002 18.957 23.184000000000005 19.408 22.374000000000002 20.298000000000002 C 21.582 21.171000000000003 21.180000000000003 22.293000000000003 21.180000000000003 23.635 L 21.180000000000003 25.422 L 19.934000000000005 25.422 C 19.591000000000005 25.422 19.313000000000006 25.7 19.313000000000006 26.043 L 19.313000000000006 27.38 C 19.313000000000006 27.723 19.591000000000005 28.000999999999998 19.934000000000005 28.000999999999998 L 21.180000000000003 28.000999999999998 L 21.180000000000003 29.153 C 21.180000000000003 30.419999999999998 20.661000000000005 31.174999999999997 19.548000000000002 31.526999999999997 C 19.290000000000003 31.608999999999998 19.115000000000002 31.848999999999997 19.115000000000002 32.119 L 19.115000000000002 33.399 C 19.115000000000002 33.742000000000004 19.393 34.02 19.736 34.02 L 28.267000000000003 34.02 C 28.610000000000003 34.02 28.888 33.742000000000004 28.888 33.399 L 28.888 32.072 C 28.887 31.73 28.608 31.451 28.266 31.451 z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
+
+        <p class="mt-2 text-sm">Referral</p>
+</a>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Include this script tag or install `@tailwindplus/elements` via npm: -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script> -->
+<el-dialog>
+  <dialog id="dialog" aria-labelledby="dialog-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent">
+    <el-dialog-backdrop class="fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"></el-dialog-backdrop>
+
+    <div tabindex="0" class="flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0">
+      <el-dialog-panel class="relative transform overflow-hidden rounded-lg bg-gray-800 text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div dir="rtl">
+            <div class="flex items-center">
+            <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 sm:mx-0 sm:size-10">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" data-slot="icon" aria-hidden="true" class="size-6 text-red-400">
+                <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              
+            </div>
+            <h3 id="dialog-title" class="ms-2 text-base font-semibold ">Change Password</h3>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-right">
+              
+              <form action="{% url 'accounts:change_password' %}" method="post" id="change_password_form" class="mt-2">
+                {% csrf_token %}
+                 <input type="password" placeholder="Old Password" name="old_password" class="p-2 mt-2 w-full rounded-md border-gray-600 bg-gray-100 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"><br>
+                 <input type="password" placeholder="New Password" name="new_password" class="p-2 mt-2 w-full rounded-md border-gray-600 bg-gray-100 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"><br>
+                 <input type="password" placeholder="Confirm New Password" name="confirm_new_password" class="p-2 mt-2 w-full rounded-md border-gray-600 bg-gray-100 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="bg-blue-900 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+          <button type="button" onclick="{document.getElementById('change_password_form').submit()}" class="inline-flex w-full justify-center rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white hover:bg-red-400 sm:ml-3 sm:w-auto">Change</button>
+          <button type="button" command="close" commandfor="dialog" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 inset-ring inset-ring-white/5 hover:bg-white/20 sm:mt-0 sm:w-auto">Cancel</button>
+        </div>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+{% endblock %}
+

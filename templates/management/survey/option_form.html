@@ -1,0 +1,36 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-md px-4 lg:px-12">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {% if mode == 'edit' %}تعديل خيار{% else %}إضافة خيار{% endif %}
+      </h2>
+      <p class="text-sm text-gray-500 mb-4">{{ question.text }}</p>
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.text.label }}</label>
+          {{ form.text }}
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.value.label }}</label>
+          {{ form.value }}
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.order.label }}</label>
+          {{ form.order }}
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <a href="{% url 'management:survey_options' question.id %}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+            رجوع
+          </a>
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary-700 rounded-lg hover:bg-primary-800">
+            حفظ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock content %}

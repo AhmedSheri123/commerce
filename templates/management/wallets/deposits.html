@@ -1,0 +1,64 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+    <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                <div class="w-full md:w-2/3">
+                    <form class="flex flex-col md:flex-row items-center gap-3" method="get">
+                        <div class="relative w-full md:w-1/2">
+                            <input type="text" name="q" value="{{ q }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="بحث بالمستخدم/العنوان/txid" />
+                        </div>
+                        <select name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">كل الحالات</option>
+                            <option value="pending" {% if status == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                            <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>مؤكد</option>
+                            <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>مرفوض</option>
+                        </select>
+                        <select name="order" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="newest" {% if order != 'oldest' %}selected{% endif %}>الأحدث</option>
+                            <option value="oldest" {% if order == 'oldest' %}selected{% endif %}>الأقدم</option>
+                        </select>
+                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                            فلترة
+                        </button>
+                    </form>
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                    إجمالي الإيداعات: <span class="font-semibold">{{ deposits|length }}</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th class="px-4 py-3">المستخدم</th>
+                            <th class="px-4 py-3">العنوان</th>
+                            <th class="px-4 py-3">المبلغ</th>
+                            <th class="px-4 py-3">TXID</th>
+                            <th class="px-4 py-3">الحالة</th>
+                            <th class="px-4 py-3">التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dep in deposits %}
+                        <tr class="border-b dark:border-gray-700">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ dep.wallet.user.username }}</td>
+                            <td class="px-4 py-3">{{ dep.wallet.address }}</td>
+                            <td class="px-4 py-3">{{ dep.amount|floatformat:6 }}</td>
+                            <td class="px-4 py-3">{{ dep.txid }}</td>
+                            <td class="px-4 py-3">{{ dep.get_status_display }}</td>
+                            <td class="px-4 py-3">{{ dep.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-500">لا توجد إيداعات.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

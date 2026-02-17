@@ -1,0 +1,57 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-md px-4 lg:px-12">
+    <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg p-6">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {% if mode == 'edit' %}تعديل سؤال{% else %}إضافة سؤال{% endif %}
+      </h2>
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.text.label }}</label>
+          {{ form.text }}
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.field_type.label }}</label>
+          {{ form.field_type }}
+        </div>
+        <div>
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ form.order.label }}</label>
+          {{ form.order }}
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              id="is_required_cb"
+              name="{{ form.is_required.html_name }}"
+              class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded"
+              {% if form.is_required.value %}checked{% endif %}
+            >
+            <label for="is_required_cb" class="cursor-pointer text-gray-900 dark:text-white">{{ form.is_required.label }}</label>
+          </div>
+          <div class="flex items-center gap-2 text-sm ">
+            <input
+              type="checkbox"
+              id="is_active_cb"
+              name="{{ form.is_active.html_name }}"
+              class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded"
+              {% if form.is_active.value %}checked{% endif %}
+            >
+            <label for="is_active_cb" class="cursor-pointer text-gray-900 dark:text-white">{{ form.is_active.label }}</label>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <a href="{% url 'management:survey_questions' %}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+            رجوع
+          </a>
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary-700 rounded-lg hover:bg-primary-800">
+            حفظ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock content %}

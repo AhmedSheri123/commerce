@@ -1,0 +1,169 @@
+{% extends "management_base.html" %}
+
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="mx-auto max-w-screen-xl px-4 lg:px-12 space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-5">
+      <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Notifications</h1>
+      <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% csrf_token %}
+        <div class="md:col-span-2">
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Title</label>
+          {{ form.title }}
+          {% if form.title.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.title.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        <div class="md:col-span-2">
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Message</label>
+          {{ form.message }}
+          {% if form.message.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.message.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200">Target User</label>
+          <input
+            id="target-user-search"
+            type="text"
+            placeholder="Search username..."
+            class="mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+          >
+          {{ form.target_user }}
+          <p id="target-user-search-hint" class="mt-1 text-xs text-gray-500"></p>
+          {% if form.target_user.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.target_user.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        <div class="flex items-end gap-6">
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            {{ form.target_all }}
+            <span>Send to all users</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+            {{ form.is_active }}
+            <span>Active</span>
+          </label>
+        </div>
+        <div class="md:col-span-2">
+          <button
+            type="submit"
+            class="inline-flex items-center rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800"
+          >
+            Create Notification
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-base font-semibold text-gray-900 dark:text-white">Recent Notifications</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+          <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-200">
+            <tr>
+              <th class="px-4 py-3">Title</th>
+              <th class="px-4 py-3">Target</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Created By</th>
+              <th class="px-4 py-3">Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in notifications %}
+              <tr class="border-b dark:border-gray-700">
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900 dark:text-white">{{ n.title }}</div>
+                  <div class="text-xs text-gray-500">{{ n.message|truncatechars:120 }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  {% if n.target_all %}
+                    All users
+                  {% elif n.target_user %}
+                    {{ n.target_user.username }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                  {% if n.is_active %}
+                    <span class="inline-flex rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">Active</span>
+                  {% else %}
+                    <span class="inline-flex rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3">{{ n.created_by.username|default:"-" }}</td>
+                <td class="px-4 py-3">{{ n.created_at|date:"Y-m-d H:i" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="px-4 py-8 text-center text-gray-500">No notifications found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  (function () {
+    const searchInput = document.getElementById("target-user-search");
+    const targetSelect = document.getElementById("id_target_user");
+    const targetAllCheckbox = document.getElementById("id_target_all");
+    const hint = document.getElementById("target-user-search-hint");
+
+    if (!searchInput || !targetSelect || !targetAllCheckbox || !hint) return;
+
+    const allOptions = Array.from(targetSelect.options).map((opt) => ({
+      value: opt.value,
+      text: opt.text,
+    }));
+
+    function renderOptions() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const currentValue = targetSelect.value;
+      const matched = allOptions.filter((opt, index) => {
+        if (index === 0 || !opt.value) return true; // keep placeholder option
+        return opt.text.toLowerCase().includes(keyword);
+      });
+
+      targetSelect.innerHTML = "";
+      matched.forEach((opt) => {
+        targetSelect.add(new Option(opt.text, opt.value));
+      });
+
+      if (matched.some((opt) => opt.value === currentValue)) {
+        targetSelect.value = currentValue;
+      }
+
+      const matchedCount = matched.filter((opt) => !!opt.value).length;
+      const totalCount = allOptions.filter((opt) => !!opt.value).length;
+      hint.textContent = keyword
+        ? `${matchedCount} user(s) matched`
+        : `${totalCount} user(s) available`;
+    }
+
+    function syncHintWithTargetMode() {
+      if (targetAllCheckbox.checked) {
+        hint.textContent += " | currently set to all users";
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      renderOptions();
+      syncHintWithTargetMode();
+    });
+
+    targetAllCheckbox.addEventListener("change", () => {
+      renderOptions();
+      syncHintWithTargetMode();
+    });
+
+    renderOptions();
+    syncHintWithTargetMode();
+  })();
+</script>
+{% endblock content %}
