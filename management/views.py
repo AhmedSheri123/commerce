@@ -345,7 +345,6 @@ def addProductGroup(request, category_id):
 
         if not form.errors:
             suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-                category=category,
                 target_total=target_total_decimal,
                 products_count=products_count_int,
             )
@@ -418,7 +417,6 @@ def editProductGroup(request, category_id, group_id):
 
         if not form.errors:
             suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-                category=category,
                 target_total=target_total_decimal,
                 products_count=products_count_int,
             )
@@ -438,7 +436,6 @@ def editProductGroup(request, category_id, group_id):
         form = ProductGroupForm(instance=group)
         if group.target_total_price and group.products_count:
             suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-                category=category,
                 target_total=group.target_total_price,
                 products_count=group.products_count,
             )

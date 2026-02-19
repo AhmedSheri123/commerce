@@ -38,10 +38,9 @@ class CategoryForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = ProductModel
-        fields = ["name", "category", "price", "image"]
+        fields = ["name", "price", "image"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
-            "category": forms.Select(attrs={"class": "form-select"}),
             "price": forms.NumberInput(attrs={"class": "form-input"}),
             "image": forms.ClearableFileInput(attrs={"class": "form-file-input"}),
         }
