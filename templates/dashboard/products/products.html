@@ -434,6 +434,14 @@
   const view_product_ajax = "{% url 'products:view_product_ajax' %}"
   const buy_product_ajax = "{% url 'products:buy_product_ajax' %}"
   const view_products_ajax = "{% url 'products:view_products_ajax' %}"
+
+window.addEventListener('load', function() {
+  const is_done = '{{is_done}}'
+  if (is_done == 'True') {
+      showComplitionModal();
+  }
+});
+
 </script>
 <script src='{% static "js/products.js" %}'></script>
 

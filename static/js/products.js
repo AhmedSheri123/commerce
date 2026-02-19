@@ -133,12 +133,6 @@ function buyProduct(order_button) {
         });
 }
 
-window.addEventListener('load', function() {
-  const is_done = '{{is_done}}'
-  if (is_done == 'True') {
-      showComplitionModal();
-  }
-});
 
 
 
