@@ -2,6 +2,7 @@ import argparse
 import csv
 import hashlib
 import os
+import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urlparse
@@ -16,6 +17,17 @@ django.setup()
 from django.core.files.base import ContentFile
 
 from products.models import ProductModel
+
+
+def set_csv_field_limit():
+    # Some CSV rows contain very large text fields.
+    max_size = sys.maxsize
+    while True:
+        try:
+            csv.field_size_limit(max_size)
+            break
+        except OverflowError:
+            max_size = max_size // 10
 
 
 def parse_price(row):
@@ -69,6 +81,8 @@ def product_exists(name):
 
 
 def import_products(csv_path, limit, timeout):
+    set_csv_field_limit()
+
     added = 0
     skipped_existing = 0
     skipped_invalid = 0
