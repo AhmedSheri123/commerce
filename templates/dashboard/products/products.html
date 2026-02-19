@@ -4,7 +4,7 @@
 {% block title %}Commerce — Home{% endblock %}
 
 {% block content %}
-<div class="w-full md:p-10 mb-5 min-h-screen ">
+<div class="w-full md:p-10 mb-5 min-h-screen">
   <div class="p-4">
     <h2 class="pb-4 text-lg font-medium">All Products</h2>
     <!-- <div
@@ -78,6 +78,8 @@
 
   </div>
 </div>
+
+
 
 <div class="w-full md:p-10 p-4  bg-white border-gray-200 border-t-2">
       <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center  mb-5 lazy-video">
@@ -268,7 +270,7 @@
   <div class="relative p-4 w-full max-w-2xl max-h-full">
 
     <!-- Modal content -->
-    <div class="relative bg-white rounded-lg shadow-lg border border-gray-200 min-h-screen">
+    <div class="relative bg-white rounded-lg shadow-lg border border-gray-200">
 
         <!-- Header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 gap-3">
@@ -358,38 +360,31 @@
             </div>
 
 
-          <div class="space-y-2 product-detail">
-            <img width="120" class="rounded-lg mx-auto" id="modal-product-image2" 
-
+          <div class="space-y-3 product-detail">
             <dl class="flex justify-between">
               <dt class="text-gray-500">Product Type</dt>
               <dd id="modal-brand" class="font-medium"></dd>
             </dl>
 
-            <dl class="flex justify-between">
-              <dt class="text-gray-500">Product</dt>
-              <dd id="modal-product-name" class="font-medium"></dd>
-            </dl>
+            <div id="modal-products-list" class="space-y-2"></div>
 
-            <dl class="flex justify-between">
-              <dt class="text-gray-500">Purchase Price</dt>
+            <dl class="flex justify-between border-t pt-2">
+              <dt class="text-gray-500">Total Buy</dt>
               <dd id="modal-buy-price" class="font-medium"></dd>
             </dl>
 
             <dl class="flex justify-between">
-              <dt class="text-gray-500">Selling Price</dt>
+              <dt class="text-gray-500">Total Sell</dt>
               <dd id="modal-sell-price" class="font-medium text-green-600"></dd>
             </dl>
-
-
           </div>
 
-          <dl class="flex justify-between border-t pt-2">
+          {% comment %} <dl class="flex justify-between border-t pt-2">
             <dt class="font-bold text-green-600">Profit</dt>
             <dd id="modal-profit" class="font-bold text-green-600"></dd>
-          </dl>
+          </dl> {% endcomment %}
 
-          <!-- Progress -->
+          {% comment %} <!-- Progress -->
           <div>
             <div class="flex justify-between font-bold">
               <span>Progress</span>
@@ -399,7 +394,7 @@
             <div class="mt-2 w-full border p-1 rounded">
               <div id="modal-progress-bar" class="h-1.5 bg-green-500 rounded"></div>
             </div>
-          </div>
+          </div> {% endcomment %}
 
         </div>
 
@@ -410,8 +405,8 @@
     </div>
 
 
-        <button onclick="buyProduct()" data-product-id=""
-          class="mt-4 mx-auto block text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5">
+        <button onclick="buyProduct(this)" data-product-id="" data-group-id=""
+          class="mt-4 mx-auto block text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5 disabled:bg-gray-400 disabled:cursor-not-allowed">
           Order Now
         </button>
       </div>

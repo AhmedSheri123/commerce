@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="mx-auto min-h-screen">
+<div class="mx-auto">
 
 
 
@@ -85,7 +85,12 @@
                     
 
                     <div class="flex items-center gap-2.5">
-                        <img class="w-10 h-10 rounded-full" src="{{ order.product.image.url }}" alt="">
+                              {% if order.product.image %}
+                                <img src="{{ order.product.image.url }}" alt="{{ order.product.name }} logo" class="w-10 h-10 rounded-full inline-block mr-2">
+                              {% else %}
+                                <img src="{% static 'img/Image-not-found.png' %}" alt="{{ order.product.name }} logo" class="w-8 h-8 rounded-full inline-block mr-2">
+
+                                {% endif %}
                         <div class="font-medium text-heading">
                             <div>{{ order.product.name }}</div>
                             <div class="text-sm font-normal text-body">{{ order.product.category }}</div>

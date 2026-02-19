@@ -277,6 +277,3 @@ function gen_winner(){
 
 }
 
-setInterval(() => {
-    gen_winner()
-}, 15000); // 10000 ملي ثانية = 10 ثواني

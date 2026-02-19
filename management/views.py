@@ -6,8 +6,9 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
-from products.forms import PlatformForm, CategoryForm, ProductForm
-from products.models import ProductModel, CategoryModel, PlatformModel
+from decimal import Decimal
+from products.forms import PlatformForm, CategoryForm, ProductForm, ProductGroupForm
+from products.models import ProductModel, CategoryModel, PlatformModel, ProductGroupModel
 from accounts.models import (
     UserProfile,
     Transaction,
@@ -68,7 +69,7 @@ def index(request):
 
         'progress_earned_total': UserProgress.objects.aggregate(total=Sum('total_earned'))['total'] or 0,
         'products_price_total': ProductModel.objects.aggregate(total=Sum('price'))['total'] or 0,
-        'products_profit_total': ProductModel.objects.aggregate(total=Sum('profit'))['total'] or 0,
+        'products_profit_total': ProductGroupModel.objects.aggregate(total=Sum('profit'))['total'] or 0,
 
         'recent_users': users_qs.order_by('-date_joined')[:5],
         'recent_deposits': Deposit.objects.select_related('wallet', 'wallet__user').order_by('-created_at')[:5],
@@ -287,15 +288,190 @@ def DeleteProduct(request, product_id):
 
 
 #=======================================
+def ViewProductGroups(request, category_id):
+    category = get_object_or_404(CategoryModel, id=category_id)
+    groups = ProductGroupModel.objects.filter(category_id=category_id).order_by('-created_at')
+    q = request.GET.get('q', '').strip()
+
+    if q:
+        groups = groups.filter(Q(name__icontains=q) | Q(description__icontains=q))
+
+    return render(request, 'management/group/groups.html', {
+        'category': category,
+        'groups': groups,
+        'q': q,
+    })
+
+
+def addProductGroup(request, category_id):
+    category = get_object_or_404(CategoryModel, id=category_id)
+    products = ProductModel.objects.filter(category_id=category_id).order_by('name')
+    suggestion = []
+    suggested_total = None
+    suggested_sell_total = None
+
+    if request.method == 'POST':
+        form = ProductGroupForm(request.POST)
+        action = request.POST.get('action', 'preview')
+
+        target_total = form.data.get('target_total_price')
+        products_count = form.data.get('products_count')
+        profit = form.data.get('profit')
+
+        try:
+            target_total_decimal = Decimal(str(target_total))
+        except Exception:
+            target_total_decimal = None
+            form.add_error('target_total_price', 'Target total price is invalid.')
+
+        try:
+            products_count_int = int(products_count)
+        except Exception:
+            products_count_int = None
+            form.add_error('products_count', 'Products count must be a valid integer.')
+
+        try:
+            profit_decimal = Decimal(str(profit))
+        except Exception:
+            profit_decimal = None
+            form.add_error('profit', 'Profit is invalid.')
+
+        if target_total_decimal is not None and target_total_decimal <= 0:
+            form.add_error('target_total_price', 'Target total price must be greater than 0.')
+        if products_count_int is not None and products_count_int <= 0:
+            form.add_error('products_count', 'Products count must be greater than 0.')
+        if profit_decimal is not None and profit_decimal < 0:
+            form.add_error('profit', 'Profit must be 0 or greater.')
+
+        if not form.errors:
+            suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
+                category=category,
+                target_total=target_total_decimal,
+                products_count=products_count_int,
+            )
+            if not suggestion:
+                form.add_error(None, 'No suggestion found for this category.')
+            else:
+                suggested_sell_total = suggested_total + profit_decimal
+
+        if action == 'save' and not form.errors and form.is_valid():
+            group = form.save(commit=False)
+            group.category = category
+            if group.stage is None:
+                group.stage = category.stage
+            group.save()
+            return redirect('management:product_groups', category_id=category.id)
+    else:
+        form = ProductGroupForm()
+
+    return render(request, 'management/group/add_group.html', {
+        'form': form,
+        'category': category,
+        'products': products,
+        'suggestion': suggestion,
+        'mode': 'add',
+        'suggested_total': suggested_total,
+        'suggested_sell_total': suggested_sell_total,
+    })
+
+
+def editProductGroup(request, category_id, group_id):
+    category = get_object_or_404(CategoryModel, id=category_id)
+    group = get_object_or_404(ProductGroupModel, id=group_id, category_id=category_id)
+    products = ProductModel.objects.filter(category_id=category_id).order_by('name')
+    suggestion = []
+    suggested_total = None
+    suggested_sell_total = None
+
+    if request.method == 'POST':
+        form = ProductGroupForm(request.POST, instance=group)
+        action = request.POST.get('action', 'preview')
+
+        target_total = form.data.get('target_total_price')
+        products_count = form.data.get('products_count')
+        profit = form.data.get('profit')
+
+        try:
+            target_total_decimal = Decimal(str(target_total))
+        except Exception:
+            target_total_decimal = None
+            form.add_error('target_total_price', 'Target total price is invalid.')
+
+        try:
+            products_count_int = int(products_count)
+        except Exception:
+            products_count_int = None
+            form.add_error('products_count', 'Products count must be a valid integer.')
+
+        try:
+            profit_decimal = Decimal(str(profit))
+        except Exception:
+            profit_decimal = None
+            form.add_error('profit', 'Profit is invalid.')
+
+        if target_total_decimal is not None and target_total_decimal <= 0:
+            form.add_error('target_total_price', 'Target total price must be greater than 0.')
+        if products_count_int is not None and products_count_int <= 0:
+            form.add_error('products_count', 'Products count must be greater than 0.')
+        if profit_decimal is not None and profit_decimal < 0:
+            form.add_error('profit', 'Profit must be 0 or greater.')
+
+        if not form.errors:
+            suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
+                category=category,
+                target_total=target_total_decimal,
+                products_count=products_count_int,
+            )
+            if not suggestion:
+                form.add_error(None, 'No suggestion found for this category.')
+            else:
+                suggested_sell_total = suggested_total + profit_decimal
+
+        if action == 'save' and not form.errors and form.is_valid():
+            group = form.save(commit=False)
+            group.category = category
+            if group.stage is None:
+                group.stage = category.stage
+            group.save()
+            return redirect('management:product_groups', category_id=category.id)
+    else:
+        form = ProductGroupForm(instance=group)
+        if group.target_total_price and group.products_count:
+            suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
+                category=category,
+                target_total=group.target_total_price,
+                products_count=group.products_count,
+            )
+            suggested_sell_total = suggested_total + (group.profit or Decimal('0'))
+
+    return render(request, 'management/group/add_group.html', {
+        'form': form,
+        'category': category,
+        'group': group,
+        'products': products,
+        'mode': 'edit',
+        'suggestion': suggestion,
+        'suggested_total': suggested_total,
+        'suggested_sell_total': suggested_sell_total,
+    })
+
+@require_POST
+def deleteProductGroup(request, category_id, group_id):
+    group = get_object_or_404(ProductGroupModel, id=group_id, category_id=category_id)
+    group.delete()
+    return redirect('management:product_groups', category_id=category_id)
+
+
+#=======================================
 
 def ViewUsers(request):
     users = User.objects.select_related(
         'profile',
         'wallet',
         'progress',
-        'progress__product',
-        'progress__product__category',
-        'progress__product__category__platform',
+        'progress__product_group',
+        'progress__product_group__category',
+        'progress__product_group__category__platform',
     ).annotate(
         deposited_total=Sum('wallet__deposits__amount')
     ).all()
@@ -401,9 +577,9 @@ def toggleUserEnabled(request, user_id):
 def UserAnalytics(request, user_id):
     user = get_object_or_404(User, id=user_id)
     progress = UserProgress.objects.select_related(
-        'product',
-        'product__category',
-        'product__category__platform',
+        'product_group',
+        'product_group__category',
+        'product_group__category__platform',
     ).filter(user=user).first()
     deposits = Deposit.objects.select_related('wallet').filter(wallet__user=user).order_by('-created_at')
     withdrawals = Transaction.objects.filter(user=user, transaction_type='withdraw').order_by('-created_at')
@@ -415,19 +591,19 @@ def UserAnalytics(request, user_id):
     if request.method == 'POST':
         form = UserProgressForm(request.POST)
         if form.is_valid():
-            product = form.cleaned_data['product']
+            product_group = form.cleaned_data['product_group']
             if progress:
-                progress.product = product
+                progress.product_group = product_group
                 progress.save()
             else:
-                UserProgress.objects.create(user=user, product=product)
+                UserProgress.objects.create(user=user, product_group=product_group)
             return redirect('management:user_analytics', user_id=user.id)
     else:
         if progress:
             form = UserProgressForm(initial={
-                'platform': progress.product.category.platform,
-                'category': progress.product.category,
-                'product': progress.product,
+                'platform': progress.product_group.category.platform,
+                'category': progress.product_group.category,
+                'product_group': progress.product_group,
             })
         else:
             form = UserProgressForm()
@@ -624,8 +800,8 @@ def api_categories_by_platform(request, platform_id):
 
 
 def api_products_by_category(request, category_id):
-    products = ProductModel.objects.filter(category_id=category_id).order_by('name')
-    data = [{'id': p.id, 'name': p.name} for p in products]
+    groups = ProductGroupModel.objects.filter(category_id=category_id).order_by('stage', 'id')
+    data = [{'id': g.id, 'name': g.name or f'Group {g.stage if g.stage is not None else g.id}'} for g in groups]
     return JsonResponse({'products': data})
 
 

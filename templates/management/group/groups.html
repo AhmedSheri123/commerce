@@ -1,0 +1,68 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+    <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3 p-4">
+                <form class="w-full md:w-1/2 flex gap-2" method="get">
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search groups"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2">
+                    <button type="submit"
+                        class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-4 py-2">Filter</button>
+                </form>
+                <a href="{% url 'management:add_product_group' category.id %}"
+                    class="text-white bg-primary-700 hover:bg-primary-800 font-medium rounded-lg text-sm px-4 py-2">
+                    Add Group
+                </a>
+            </div>
+
+            <div class="px-4 pb-2 text-sm text-gray-600 dark:text-gray-300">
+                Category: <span class="font-semibold">{{ category.name }}</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th class="px-4 py-3">Name</th>
+                            <th class="px-4 py-3">Description</th>
+                            <th class="px-4 py-3">Stage</th>
+                            <th class="px-4 py-3">Products Count</th>
+                            <th class="px-4 py-3">Target Total</th>
+                            <th class="px-4 py-3">Profit</th>
+                            <th class="px-4 py-3">Created</th>
+                            <th class="px-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for group in groups %}
+                        <tr class="border-b dark:border-gray-700">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ group.name }}</td>
+                            <td class="px-4 py-3">{{ group.description|default:"-" }}</td>
+                            <td class="px-4 py-3">{{ group.stage|default:"-" }}</td>
+                            <td class="px-4 py-3">{{ group.products_count }}</td>
+                            <td class="px-4 py-3">{{ group.target_total_price|default:"0.00" }}</td>
+                            <td class="px-4 py-3 text-green-700">{{ group.profit|default:"0.00" }}</td>
+                            <td class="px-4 py-3">{{ group.created_at|date:"Y-m-d" }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <a href="{% url 'management:edit_product_group' category.id group.id %}" class="text-xs text-blue-600 hover:underline">Edit</a>
+                                    <form method="post" action="{% url 'management:delete_product_group' category.id group.id %}" onsubmit="return confirm('Delete this group?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-xs text-red-600 hover:underline">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="px-4 py-6 text-center">No groups found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

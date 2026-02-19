@@ -23,31 +23,31 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">المنصة</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.platform.name }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.category.platform.name }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">الفئة</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.name }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.category.name }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">مرحلة الفئة</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.category.stage }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.category.stage }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">المنتج الحالي</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.name }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.name }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">مرحلة المنتج</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.stage }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.stage }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">سعر المنتج</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.price|floatformat:2 }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.target_total_price|floatformat:2 }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">ربح المنتج</div>
-                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product.profit|floatformat:2 }}</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white">{{ progress.product_group.profit|floatformat:2 }}</div>
                 </div>
                 <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div class="text-sm text-gray-500">إجمالي ربح المستخدم</div>
@@ -104,9 +104,9 @@
                         {% endfor %}
                     </div>
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ progress_form.product.label }}</label>
-                        {{ progress_form.product }}
-                        {% for error in progress_form.product.errors %}
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ progress_form.product_group.label }}</label>
+                        {{ progress_form.product_group }}
+                        {% for error in progress_form.product_group.errors %}
                             <p class="text-sm text-red-600 mt-1">{{ error }}</p>
                         {% endfor %}
                     </div>
@@ -222,7 +222,7 @@
 
     const platformSelect = form.querySelector('select[name="platform"]');
     const categorySelect = form.querySelector('select[name="category"]');
-    const productSelect = form.querySelector('select[name="product"]');
+    const productSelect = form.querySelector('select[name="product_group"]');
     const categoriesUrlBase = form.dataset.categoriesUrl;
     const productsUrlBase = form.dataset.productsUrl;
 
@@ -285,3 +285,4 @@
   })();
 </script>
 {% endblock content %}
+

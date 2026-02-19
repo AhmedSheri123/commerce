@@ -1,0 +1,130 @@
+{% extends "management_base.html" %}
+{% block content %}
+<section class="bg-gray-50 dark:bg-gray-900">
+    <div class="mx-auto max-w-5xl px-4 lg:px-12">
+        <form method="post" class="bg-white p-4 rounded-md shadow">
+            {% csrf_token %}
+
+            <h2 class="text-lg font-semibold mb-1">
+                {% if mode == "edit" %}Edit Product Group{% else %}Add Product Group{% endif %}
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">Category: {{ category.name }}</p>
+
+            {% if form.errors %}
+            <div class="mb-4 p-3 rounded bg-red-50 text-red-700 text-sm">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm mb-1">Group Name</label>
+                    <input type="text" name="name" value="{{ form.name.value|default:'' }}"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Description</label>
+                    <textarea name="description" rows="3"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm mb-1">Stage</label>
+                    <input type="number" min="1" step="1" name="stage"
+                        value="{{ form.stage.value|default:category.stage }}"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Target Total Price</label>
+                    <input type="number" min="0.01" step="0.01" name="target_total_price"
+                        value="{{ form.target_total_price.value|default:'' }}"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Products Count</label>
+                    <input type="number" min="1" step="1" name="products_count"
+                        value="{{ form.products_count.value|default:'' }}"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Group Profit</label>
+                    <input type="number" min="0" step="0.01" name="profit"
+                        value="{{ form.profit.value|default:'' }}"
+                        class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5">
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-4">
+                <button type="submit" name="action" value="preview"
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm px-5 py-2.5">
+                    Preview Suggestion
+                </button>
+                <button type="submit" name="action" value="save"
+                    class="text-white bg-blue-700 hover:bg-blue-800 rounded-lg text-sm px-5 py-2.5">
+                    Save Group
+                </button>
+                <a href="{% url 'management:product_groups' category.id %}"
+                    class="text-sm px-5 py-2.5 rounded-lg border border-gray-300">Back</a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2">Product</th>
+                            <th class="px-3 py-2">Price</th>
+                            <th class="px-3 py-2">Quantity</th>
+                            <th class="px-3 py-2">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in suggestion %}
+                        <tr class="border-t">
+                            <td class="px-3 py-2">{{ row.product.name }}</td>
+                            <td class="px-3 py-2">{{ row.product.price|floatformat:2 }}</td>
+                            <td class="px-3 py-2">{{ row.quantity }}</td>
+                            <td class="px-3 py-2">{{ row.line_total|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-3 py-4 text-center text-gray-500">
+                                No suggestion yet. Click Preview Suggestion.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-50">
+                            <td colspan="3" class="px-3 py-2 text-right font-semibold">Suggested Total</td>
+                            <td class="px-3 py-2 font-semibold">
+                                {% if suggested_total %}{{ suggested_total|floatformat:2 }}{% else %}0.00{% endif %}
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td colspan="3" class="px-3 py-2 text-right font-semibold">Group Profit</td>
+                            <td class="px-3 py-2 font-semibold text-green-700">
+                                {{ form.profit.value|default:"0"|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td colspan="3" class="px-3 py-2 text-right font-semibold">Expected Sell Total</td>
+                            <td class="px-3 py-2 font-semibold text-blue-700">
+                                {% if suggested_sell_total %}{{ suggested_sell_total|floatformat:2 }}{% else %}0.00{% endif %}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock content %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from accounts.models import UserProfile, SurveyQuestion, SurveyOption, Notification
-from products.models import PlatformModel, CategoryModel, ProductModel
+from products.models import PlatformModel, CategoryModel, ProductGroupModel, ProductModel
 from management.models import SupportContact
 
 
@@ -182,10 +182,10 @@ class UserProgressForm(forms.Form):
         required=True,
         label="الفئة",
     )
-    product = forms.ModelChoiceField(
-        queryset=ProductModel.objects.select_related('category', 'category__platform').all(),
+    product_group = forms.ModelChoiceField(
+        queryset=ProductGroupModel.objects.select_related('category', 'category__platform').all(),
         required=True,
-        label="المنتج",
+        label="Group",
     )
 
     def __init__(self, *args, **kwargs):
@@ -200,13 +200,13 @@ class UserProgressForm(forms.Form):
         cleaned = super().clean()
         platform = cleaned.get("platform")
         category = cleaned.get("category")
-        product = cleaned.get("product")
+        product_group = cleaned.get("product_group")
 
         if platform and category and category.platform_id != platform.id:
             self.add_error("category", "الفئة لا تنتمي إلى المنصة المختارة.")
 
-        if category and product and product.category_id != category.id:
-            self.add_error("product", "المنتج لا ينتمي إلى الفئة المختارة.")
+        if category and product_group and product_group.category_id != category.id:
+            self.add_error("product_group", "Selected group does not belong to selected category.")
 
         return cleaned
 
@@ -273,3 +273,5 @@ class SupportContactForm(forms.ModelForm):
                     "class",
                     "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5",
                 )
+
+

@@ -127,28 +127,28 @@
 
                             <td class="px-4 py-3">
                                 {% if user.progress %}
-                                    {{ user.progress.product.category.platform.name }}
+                                    {{ user.progress.product_group.category.platform.name }}
                                 {% else %}
                                     -
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3">
                                 {% if user.progress %}
-                                    {{ user.progress.product.category.name }}
+                                    {{ user.progress.product_group.category.name }}
                                 {% else %}
                                     -
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3">
                                 {% if user.progress %}
-                                    {{ user.progress.product.name }}
+                                    {{ user.progress.product_group.name|default:"-" }}
                                 {% else %}
                                     -
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3">
                                 {% if user.progress %}
-                                    {{ user.progress.product.stage }}
+                                    {{ user.progress.product_group.stage|default:"-" }}
                                 {% else %}
                                     -
                                 {% endif %}

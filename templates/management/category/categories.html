@@ -65,7 +65,7 @@
                             </td>
                             <td class="px-4 py-3">
                               {{ category.products.count }}
-                              <a href="{% url 'management:products' category.id %}" class="text-xs text-blue-500">View</a>
+                              <a href="{% url 'management:product_groups' category.id %}" class="text-xs text-blue-500">View Groups</a>
                             </td>
                             <td class="px-4 py-3">
                               {{ category.created_at|date:"Y-m-d" }}

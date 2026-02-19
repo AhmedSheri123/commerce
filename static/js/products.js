@@ -26,23 +26,41 @@ function loadProduct(button) {
 
             const item = response.data[0];
             const product = item.products[0];
+            const productsListEl = document.getElementById("modal-products-list");
+            productsListEl.innerHTML = "";
+
+            item.products.forEach((p) => {
+                const row = document.createElement("div");
+                row.className = "flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-2";
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0">
+                        <img src="${p.product_image_url || ''}" alt="${p.product_name}" class="h-12 w-12 rounded-md object-cover border border-gray-200">
+                        <div class="min-w-0">
+                            <div class="font-medium text-sm text-gray-800 truncate">${p.product_name}</div>
+                            <div class="text-xs text-gray-500">Qty: ${p.quantity}x</div>
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold text-gray-700">$${Number(p.line_total || 0).toFixed(2)}</div>
+                `;
+                productsListEl.appendChild(row);
+            });
 
             document.getElementById("modal-category").innerText = item.product_type;
-            document.getElementById("modal-product-image").src = product.product_image_url;
-            document.getElementById("modal-product-image2").src = product.product_image_url;
+            document.getElementById("modal-product-image").src = product.product_image_url || "";
             document.getElementById("modal-count").innerText = item.products_count + " Products";
 
-            document.getElementById("modal-brand").innerText = item.product_type;
-            document.getElementById("modal-product-name").innerText = product.product_name;
-            document.getElementById("modal-buy-price").innerText = "$" + product.buy_price;
-            document.getElementById("modal-sell-price").innerText = "$" + product.sell_price;
-            document.getElementById("modal-profit").innerText = "$" + product.profit;
+            // document.getElementById("modal-brand").innerText = item.product_type;
+            document.getElementById("modal-buy-price").innerText = "$" + Number(item.group_total || 0).toFixed(2);
+            document.getElementById("modal-sell-price").innerText = "$" + Number((item.group_total || 0) + (item.group_profit || 0)).toFixed(2);
+            // document.getElementById("modal-profit").innerText = "$" + product.profit;
 
-            document.getElementById("modal-progress-percent").innerText = product.progress + "%";
-            document.getElementById("modal-progress-bar").style.width = product.progress + "%";
+            // document.getElementById("modal-progress-percent").innerText = product.progress + "%";
+            // document.getElementById("modal-progress-bar").style.width = product.progress + "%";
 
 
-              modal.querySelector('button[data-product-id]').setAttribute('data-product-id', product.product_id);
+              const orderBtn = modal.querySelector('button[data-product-id]');
+              orderBtn.setAttribute('data-product-id', "");
+              orderBtn.setAttribute('data-group-id', item.group_id || "");
               hideProductSkeleton();
         })
         .catch(
@@ -69,14 +87,22 @@ function hideProductDetailModal() {
   el.click();
 }
 
-function buyProduct() {
+function disable_button(button) {
+    button.disabled = true;
+}
+function enable_button(button) {
+    button.disabled = false;
+}
+
+function buyProduct(order_button) {
+    disable_button(order_button);
     showProductSkeleton();
     const modal = document.getElementById("product-detail-modal");
     const button = modal.querySelector('button[data-product-id]');
     const showProductBtn = document.getElementById("show-product-btn"); 
-    const product_id = button.dataset.productId;
+    const group_id = button.dataset.groupId || "";
 
-    fetch(`${buy_product_ajax}?product_id=${product_id}`)
+    fetch(`${buy_product_ajax}?group_id=${group_id}`)
         .then(res => {
             if (!res.ok) {
                 // Any status code other than 200-299
@@ -95,11 +121,13 @@ function buyProduct() {
 
             loadProduct(showProductBtn)
             hideProductSkeleton();
+            enable_button(order_button);
         })
         .catch(error => {
             loadProduct(showProductBtn)
             tocastGen("An error occurred while purchasing the product.", 'error');
             hideProductSkeleton();
+            enable_button(order_button);
         });
 }
 
