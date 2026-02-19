@@ -36,7 +36,6 @@
                             <th scope="col" class="px-4 py-3">Name</th>
                             <th scope="col" class="px-4 py-3">Description</th>
                             <th scope="col" class="px-4 py-3">Categories</th>
-                            <th scope="col" class="px-4 py-3">Products</th>
                             <th scope="col" class="px-4 py-3">Created</th>
                             <th scope="col" class="px-4 py-3">
                                 <span class="sr-only">Actions</span>
@@ -63,9 +62,7 @@
                               {{ plateform.categories.count }}
                               <a href="{% url 'management:categories' plateform.id %}" class="text-xs text-blue-500">View</a>
                             </td>
-                            <td class="px-4 py-3">
-                              {{ plateform.product_count }}
-                            </td>
+
                             <td class="px-4 py-3">
                               {{ plateform.created_at|date:"Y-m-d" }}
                             </td>
