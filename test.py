@@ -120,7 +120,7 @@ def main():
     )
     parser.add_argument(
         "--csv",
-        default=r"F:\commerce\amazon-products.csv",
+        default=str(Path(__file__).with_name("amazon-products.csv")),
         help="Path to CSV file.",
     )
     parser.add_argument(

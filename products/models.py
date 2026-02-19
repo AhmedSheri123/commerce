@@ -60,7 +60,7 @@ class ProductGroupModel(models.Model):
         return self.name
 
     @classmethod
-    def suggest_items_for_target(cls, category, target_total, products_count):
+    def suggest_items_for_target(cls, target_total, products_count):
         """
         Return suggested products and quantities close to target total price.
         The result shape:
