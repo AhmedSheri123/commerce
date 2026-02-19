@@ -72,7 +72,10 @@
                 </th>
 
                 <th scope="col" class="px-6 py-3">
-                    Price/Profit
+                    Price/Qty
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Date
                 </th>
 
             </tr>
@@ -91,22 +94,26 @@
                                 <img src="{% static 'img/Image-not-found.png' %}" alt="{{ order.product.name }} logo" class="w-8 h-8 rounded-full inline-block mr-2">
 
                                 {% endif %}
-                        <div class="font-medium text-heading">
-                            <div>{{ order.product.name }}</div>
-                            <div class="text-sm font-normal text-body">{{ order.product.category }}</div>
+                        <div class="font-medium text-heading w-44">
+                            <p class="truncate whitespace-nowrap overflow-hidden" title="{{ order.product.name }}">{{ order.product.name }}</p>
+                            <div class="text-sm font-normal text-body">Order #{{ order.id }} - Qty {{ order.qty }}</div>
                         </div>
                     </div>
 
                 </th>
 
                 <td class="px-6 py-4">
-                    ${{ order.total_price }}/ <span class="font-semibold text-green-600">${{ order.profit }}</span>
+                    ${{ order.total_price|floatformat:2 }}/ <span class="font-semibold text-green-600">x{{ order.qty }}</span>
+                </td>
+
+                <td class="px-6 py-4">
+                    {{ order.created_at|date:"Y-m-d H:i" }}
                 </td>
 
             </tr>
             {%empty%}
              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-                <td colspan="2" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                     No orders found.
                 </td>
             </tr>

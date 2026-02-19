@@ -34,7 +34,7 @@ function loadProduct(button) {
                 row.className = "flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-2";
                 row.innerHTML = `
                     <div class="flex items-center gap-2 min-w-0">
-                        <img src="${p.product_image_url || ''}" alt="${p.product_name}" class="h-12 w-12 rounded-md object-cover border border-gray-200">
+                        <img src="${p.product_image_url || default_image}" alt="${p.product_name}" class="h-12 w-12 rounded-md object-cover border border-gray-200">
                         <div class="min-w-0">
                             <div class="font-medium text-sm text-gray-800 truncate">${p.product_name}</div>
                             <div class="text-xs text-gray-500">Qty: ${p.quantity}x</div>
@@ -46,12 +46,14 @@ function loadProduct(button) {
             });
 
             document.getElementById("modal-category").innerText = item.product_type;
-            document.getElementById("modal-product-image").src = product.product_image_url || "";
+            document.getElementById("modal-order-date").innerText = item.order_datetime;
+            document.getElementById("modal-product-image").src = item.platform_image || default_image;
             document.getElementById("modal-count").innerText = item.products_count + " Products";
 
             // document.getElementById("modal-brand").innerText = item.product_type;
             document.getElementById("modal-buy-price").innerText = "$" + Number(item.group_total || 0).toFixed(2);
             document.getElementById("modal-sell-price").innerText = "$" + Number((item.group_total || 0) + (item.group_profit || 0)).toFixed(2);
+            document.getElementById("modal-expected-profit").innerText = "$" + Number(item.expected_profit || 0).toFixed(2);
             // document.getElementById("modal-profit").innerText = "$" + product.profit;
 
             // document.getElementById("modal-progress-percent").innerText = product.progress + "%";

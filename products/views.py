@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
-
+from django.utils import timezone
 from orders.models import OrderModel
 from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductModel, UserProgress
 
@@ -61,6 +61,9 @@ def products(request):
 
 @login_required
 def view_product_ajax(request):
+    user = request.user
+    profile = user.profile
+
     platform_id = request.GET.get("platform_id")
     if not platform_id:
         return JsonResponse({"data": []})
@@ -105,11 +108,14 @@ def view_product_ajax(request):
         )
 
     payload = {
+        "platform_image": group.category.platform.image.url if group.category.platform.image else None,
+        "order_datetime": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         "product_type": group.category.name,
         "group_id": group.id,
         "products_count": len(products),
         "group_total": float(suggested_total),
         "group_profit": float(group_profit),
+        "expected_profit": float(group_profit + profile.balance),
         "products": products,
     }
     return JsonResponse({"data": [payload]})
@@ -215,13 +221,12 @@ def buy_product_ajax(request):
     for row in suggestion:
         product = row["product"]
         qty = int(row["quantity"])
-        for _ in range(qty):
-            OrderModel.objects.create(
-                product=product,
-                user=user,
-                total_price=product.price,
-                profit=per_unit_profit,
-            )
+        OrderModel.objects.create(
+            product=product,
+            user=user,
+            qty=qty,
+            total_price=product.price * qty,
+        )
 
     progress = getattr(user, "progress", None)
     if progress:

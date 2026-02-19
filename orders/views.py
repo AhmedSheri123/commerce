@@ -9,5 +9,9 @@ def index(request):
     """Simple homepage view that renders templates/home/index.html"""
     user = request.user
     filter_by_day = request.GET.get('filter-by-day', 7)
-    orders = OrderModel.objects.filter(created_at__gte=timezone.now() - timezone.timedelta(days=int(filter_by_day)), user=user)
+    orders = (
+        OrderModel.objects.select_related("product")
+        .filter(created_at__gte=timezone.now() - timezone.timedelta(days=int(filter_by_day)), user=user)
+        .order_by("-created_at", "-id")
+    )
     return render(request, 'dashboard/orders/index.html', {'orders': orders, 'filter_by_day': filter_by_day})

@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var fabBtn = document.getElementById("active-users-fab");
       var modalEl = document.getElementById("active-users-modal");
       var closeBtn = document.getElementById("close-active-users-modal");
-      var countUrl = "{% url 'accounts:active_users_count_api' %}";
+      var countUrl = active_users_count_api_url;
 
       if (!fabBtn || !modalEl || !closeBtn || !countFabEl || !countModalEl) {
         return;

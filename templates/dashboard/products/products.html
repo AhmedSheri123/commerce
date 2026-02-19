@@ -367,16 +367,28 @@
             </dl>
 
             <div id="modal-products-list" class="space-y-2"></div>
+            <div>
+            <dl class="flex justify-between border-t py-2">
+              <dt class="text-gray-500">Order Date</dt>
+              <dd id="modal-order-date" class="font-medium"></dd>
+            </dl>
 
-            <dl class="flex justify-between border-t pt-2">
+              <dl class="flex justify-between border-t pt-2">
               <dt class="text-gray-500">Total Buy</dt>
               <dd id="modal-buy-price" class="font-medium"></dd>
             </dl>
 
-            <dl class="flex justify-between">
+
+            <dl class="flex justify-between mb-2">
               <dt class="text-gray-500">Total Sell</dt>
               <dd id="modal-sell-price" class="font-medium text-green-600"></dd>
             </dl>
+            <dl class="flex justify-between border-t pt-2">
+              <dt class="text-gray-500">Expected profits</dt>
+              <dd id="modal-expected-profit" class="font-medium text-green-600"></dd>
+            </dl>
+            </div>
+
           </div>
 
           {% comment %} <dl class="flex justify-between border-t pt-2">
@@ -418,6 +430,7 @@
 </div>
 
 <script>
+  const default_image = "{% static 'img/Image-not-found.png' %}"
   const view_product_ajax = "{% url 'products:view_product_ajax' %}"
   const buy_product_ajax = "{% url 'products:buy_product_ajax' %}"
   const view_products_ajax = "{% url 'products:view_products_ajax' %}"
