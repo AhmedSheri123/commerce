@@ -71,7 +71,6 @@ def view_product_ajax(request):
 
     if group.target_total_price and group.products_count:
         suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-            category=group.category,
             target_total=group.target_total_price,
             products_count=group.products_count,
         )
@@ -195,7 +194,6 @@ def buy_product_ajax(request):
         return JsonResponse({"message": "حسابك غير مفعل, لا يمكنك العمل معنا", "status": "error"})
 
     suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-        category=group.category,
         target_total=group.target_total_price or 0,
         products_count=group.products_count or 1,
     )
