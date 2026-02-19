@@ -48,9 +48,7 @@ def products(request):
     )
 
     progress = getattr(user, "progress", None)
-    is_done = False
-    if progress and progress.product_group:
-        is_done = _next_group(progress) is None
+    is_done = progress.is_done if progress else False
 
     return render(
         request,
