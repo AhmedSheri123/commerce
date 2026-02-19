@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from orders.models import OrderModel
-from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductModel, UserProgress
+from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductGroupSuggestion, UserProgress
 
 
 def _get_progress_for_platform(user, platform_id):
@@ -61,7 +61,6 @@ def products(request):
 def view_product_ajax(request):
     user = request.user
     profile = user.profile
-
     platform_id = request.GET.get("platform_id")
     if not platform_id:
         return JsonResponse({"data": []})
@@ -70,15 +69,7 @@ def view_product_ajax(request):
     if not group:
         return JsonResponse({"data": []})
 
-    if group.target_total_price and group.products_count:
-        suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-            target_total=group.target_total_price,
-            products_count=group.products_count,
-        )
-    else:
-        random_product = ProductModel.objects.filter(category=group.category).order_by("?").first()
-        suggestion = [{"product": random_product, "quantity": 1, "line_total": random_product.price}] if random_product else []
-        suggested_total = suggestion[0]["line_total"] if suggestion else 0
+    suggestion, suggested_total = ProductGroupSuggestion.get_or_create_suggestion(user, group)
 
     if not suggestion:
         return JsonResponse({"data": []})
@@ -104,11 +95,15 @@ def view_product_ajax(request):
                 "line_profit": float(line_profit),
             }
         )
+    disable_ordering = False
+    if profile.forced_withdrawal:
+        disable_ordering = profile.disable_ordering_unitl_withdrawal
 
     payload = {
         "platform_image": group.category.platform.image.url if group.category.platform.image else None,
         "order_datetime": timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
         "product_type": group.category.name,
+        "disable_ordering": disable_ordering,
         "group_id": group.id,
         "products_count": len(products),
         "group_total": float(suggested_total),
@@ -197,10 +192,7 @@ def buy_product_ajax(request):
     if not profile or not profile.is_enabled:
         return JsonResponse({"message": "حسابك غير مفعل, لا يمكنك العمل معنا", "status": "error"})
 
-    suggestion, suggested_total = ProductGroupModel.suggest_items_for_target(
-        target_total=group.target_total_price or 0,
-        products_count=group.products_count or 1,
-    )
+    suggestion, suggested_total = ProductGroupSuggestion.get_or_create_suggestion(user, group)
     if not suggestion:
         return JsonResponse({"message": "No products found for this group.", "status": "error"})
 
@@ -239,9 +231,15 @@ def buy_product_ajax(request):
         )
 
     profile.balance += total_profit
-    profile.save()
 
     is_done = progress.is_done if progress else False
+    if is_done and profile.forced_withdrawal:
+        profile.disable_ordering_unitl_withdrawal = True
+    else:
+        profile.has_withdrawn = False
+        
+    ProductGroupSuggestion.objects.filter(user=user, product_group=group).delete()
+    profile.save()
     return JsonResponse(
         {
             "message": f"لقد تم الاستثمار بالمجموعة بنجاح. وكسبت مبلغ وقدره {round(total_profit, 2)}$",

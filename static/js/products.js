@@ -16,6 +16,7 @@ function hideProductSkeleton() {
 function loadProduct(button) {
     const platformId = button.dataset.platformId;
     const modal = document.getElementById("product-detail-modal");
+    const buy_product_btn = document.getElementById("buy-product-btn")
     showProductSkeleton();
 
     fetch(`${view_product_ajax}?platform_id=${platformId}`)
@@ -51,10 +52,10 @@ function loadProduct(button) {
             document.getElementById("modal-count").innerText = item.products_count + " Products";
 
             // document.getElementById("modal-brand").innerText = item.product_type;
-            document.getElementById("modal-buy-price").innerText = "$" + Number(item.group_total || 0).toFixed(2);
-            document.getElementById("modal-sell-price").innerText = "$" + Number((item.group_total || 0) + (item.group_profit || 0)).toFixed(2);
-            document.getElementById("modal-expected-profit").innerText = "$" + Number(item.expected_profit || 0).toFixed(2);
-            // document.getElementById("modal-profit").innerText = "$" + product.profit;
+            document.getElementById("modal-buy-price").innerText = "USDT " + Number(item.group_total || 0).toFixed(2);
+            document.getElementById("modal-sell-price").innerText = "USDT " + Number((item.group_total || 0) + (item.group_profit || 0)).toFixed(2);
+            document.getElementById("modal-expected-profit").innerText = "USDT " + Number(item.expected_profit || 0).toFixed(2);
+            // document.getElementById("modal-profit").innerText = "USDT " + product.profit;
 
             // document.getElementById("modal-progress-percent").innerText = product.progress + "%";
             // document.getElementById("modal-progress-bar").style.width = product.progress + "%";
@@ -64,6 +65,10 @@ function loadProduct(button) {
               orderBtn.setAttribute('data-product-id', "");
               orderBtn.setAttribute('data-group-id', item.group_id || "");
               hideProductSkeleton();
+              
+              if (item.disable_ordering) {
+                disable_button(buy_product_btn)
+              } else {enable_button(buy_product_btn)}
         })
         .catch(
             () => {

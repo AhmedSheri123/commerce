@@ -302,6 +302,7 @@ def active_users_count_api(request):
 @login_required
 def transactions(request):
     user = request.user
+    profile = user.profile
     user_progress = user.progress if hasattr(user, 'progress') else None
     transactions = user.transactions.all().order_by('-created_at')
     
@@ -315,7 +316,7 @@ def transactions(request):
             if user_progress:
                 if user_progress.is_done:
                     if amount > 0 and wallet_address:
-                        if user.profile.balance >= amount:  # تحقق من الرصيد
+                        if profile.balance >= amount:  # تحقق من الرصيد
                             # إنشاء طلب سحب جديد (معلق)
                             Transaction.objects.create(
                                 user=user,
@@ -324,13 +325,37 @@ def transactions(request):
                                 wallet_address=wallet_address,
                                 status='pending'
                             )
+                            profile.balance -= amount
+                            profile.save()
                             messages.success(request, f"تم تقديم طلب سحب {amount} USDT، في انتظار الموافقة")
+                            return redirect('accounts:transactions')
                         else:
                             messages.error(request, "الرصيد غير كافٍ")
                     else:
                         messages.error(request, "الرجاء إدخال المبلغ وعنوان المحفظة بشكل صحيح")
                 else:
                     messages.error(request, "يرجى اكمال المهمات الموجودة لتتمكن من السحب")
+        elif action == 'cancel_withdraw':
+            tx_id = request.POST.get('tx_id')
+            tx = Transaction.objects.filter(
+                id=tx_id,
+                user=user,
+                transaction_type='withdraw',
+            ).first()
+
+            if not tx:
+                messages.error(request, "Withdrawal request not found.")
+            elif tx.status != 'pending':
+                messages.error(request, "Only pending withdrawal can be canceled.")
+            else:
+                tx.status = 'canceled'
+                tx.processed_at = timezone.now()
+                tx.save(update_fields=['status', 'processed_at', 'updated_at'])
+
+                profile.balance += tx.amount
+                profile.save(update_fields=['balance'])
+                messages.success(request, f"Withdrawal canceled and {tx.amount} USDT returned to your balance.")
+                return redirect('accounts:transactions')
         elif action == 'transfer':
             recipient_username = request.POST.get('recipient')
             try:
@@ -351,6 +376,7 @@ def transactions(request):
                         user.profile.save()
                         recipient.profile.save()
                         messages.success(request, f"تم تحويل {amount} USDT إلى {recipient.username}")
+                        return redirect('accounts:transactions')
                     else:
                         messages.error(request, "الرصيد غير كافٍ أو المبلغ غير صحيح")
                 else:messages.error(request, "المستخدم المستلم غير موجود")
@@ -507,3 +533,4 @@ def transfer_to_master_view(request, wallet_id):
     # r2 = transfer_trx(wallet, 7)
     # print(r2)
     return redirect('wallets_list')
+

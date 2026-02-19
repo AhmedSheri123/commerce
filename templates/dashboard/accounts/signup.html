@@ -11,8 +11,8 @@
         <!-- <svg class="h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
         </svg> -->
-        <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center lazy-video">
-            <source src="{% static 'img/v1.webm' %}" type="video/webm" >
+        <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center lazy-video" data-src="{% static 'img/v1.webm' %}">
+            <source src=""  type="video/webm" >
             
             <!-- Fallback text for browsers that do not support the video tag -->
             Your browser does not support the video tag.
@@ -28,10 +28,7 @@
             <input name="username" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500" required="" />
         </div>
 
-        <div class="mb-4">
-            <label class="mb-1 block text-sm font-medium text-gray-700">Invite Code</label>
-            <input name="invite_code" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500" required="" />
-        </div>
+
 
         <div class="mb-6">
             <label class="mb-1 block text-sm font-medium text-gray-700">Password</label>
@@ -41,7 +38,10 @@
             <label class="mb-1 block text-sm font-medium text-gray-700">Confirm Password</label>
             <input name="confirm_password" type="password" class="w-full rounded-lg border border-gray-300 px-3 py-2 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500" required="" />
         </div>
-
+        <div class="mb-4">
+            <label class="mb-1 block text-sm font-medium text-gray-700">Invite Code</label>
+            <input name="invite_code" type="text" class="w-full rounded-lg border border-gray-300 px-3 py-2 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500" required="" />
+        </div>
         <button type="submit" class="w-full mb-3 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition duration-300 hover:bg-blue-600">Create Account</button>
         <a href="{% url 'accounts:login' %}" class="w-full rounded-lg bg-gray-900 px-4 py-2 font-medium text-white transition duration-300 hover:bg-gray-600 block text-center">Already have an account? Sign in</a>
 

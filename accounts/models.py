@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 import uuid
 import random
+
 from .wallet import get_usdt_balance
 
 from django.utils import timezone
@@ -26,6 +27,9 @@ class UserProfile(models.Model):
     from_verified_source = models.BooleanField(default=False, help_text="هل المستخدم جاء من مصدر موثوق؟")
     is_verified = models.BooleanField(default=False, help_text="هل المستخدم موثوق به؟")
     is_enabled = models.BooleanField(default=False, help_text="تفعيل الحساب")
+    forced_withdrawal = models.BooleanField(default=True, help_text="سحب اجباري")
+    disable_ordering_unitl_withdrawal = models.BooleanField(default=False, help_text="تعطيل الطلب حتى السحب")
+    has_withdrawn = models.BooleanField(default=False, help_text="هل سحب المستخدم؟")
 
     uid = models.CharField(max_length=12, unique=True, default=uidGenerator)
     wallet_password = models.CharField(max_length=255, null=True, blank=True)
@@ -71,6 +75,7 @@ class Transaction(models.Model):
         ('pending', 'معلق'),
         ('approved', 'موافق'),
         ('rejected', 'مرفوض'),
+        ('canceled', 'ملغى من قبل المستخدم'),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')

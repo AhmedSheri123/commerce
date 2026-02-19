@@ -82,8 +82,8 @@
 
 
 <div class="w-full md:p-10 p-4  bg-white border-gray-200 border-t-2">
-      <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center  mb-5 lazy-video">
-          <source src="{% static 'img/Produce_3.mp4' %}" type="video/webm" >
+      <video width="250" autoplay autoplay loop muted playsinline class="mx-auto text-center  mb-5 lazy-video" data-src="{% static 'img/Produce_3.mp4' %}">
+          <source src="" type="video/webm" >
           
           <!-- Fallback text for browsers that do not support the video tag -->
           Your browser does not support the video tag.
@@ -138,13 +138,13 @@
                 <span class="sr-only">Close modal</span>
             </button>
             <div class="p-4 md:p-5 text-center">
-                <img class="mx-auto mb-4 lazy-gif" src="{% static 'img/Success.gif' %}" alt="">
+                <img class="mx-auto mb-4 lazy-gif" src="" data-src="{% static 'img/Success.gif' %}" alt="">
                 <h3 class="mb-5 text-lg font-normal text-gray-500 ">All products have been sold</h3>
                 <div class="flex gap-1 items-center justify-center">
                 <a href="{% url 'accounts:transactions' %}" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
                     Withdraw Balance
                 </a>
-                <button onclick="hideComplitionModal()" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Order Products</button>
+                {% comment %} <button onclick="hideComplitionModal()" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Order Products</button> {% endcomment %}
                 </div>
 
             </div>
@@ -301,14 +301,14 @@
         <!-- Body -->
       <div class="p-4 md:p-5 space-y-4">
 
-        <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
 
 
 
 
 
             <div role="status"
-              class="relative  product_skeleton hidden relative max-w-md p-4 space-y-4 border border-gray-200 divide-y divide-gray-200 rounded-sm shadow-sm animate-pulse dark:divide-gray-700 md:p-6 dark:border-gray-700">
+              class="relative product_skeleton hidden max-w-md p-4 space-y-4 border border-gray-200 divide-y divide-gray-200 rounded-sm shadow-sm animate-pulse dark:divide-gray-700 md:p-6 dark:border-gray-700">
               <div class="flex items-center justify-between">
                 <div>
                   <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
@@ -366,8 +366,8 @@
               <dd id="modal-brand" class="font-medium"></dd>
             </dl>
 
-            <div id="modal-products-list" class="space-y-2"></div>
-            <div>
+            <div id="modal-products-list" class="space-y-1"></div>
+            <div >
             <dl class="flex justify-between border-t py-2">
               <dt class="text-gray-500">Order Date</dt>
               <dd id="modal-order-date" class="font-medium"></dd>
@@ -381,7 +381,7 @@
 
             <dl class="flex justify-between mb-2">
               <dt class="text-gray-500">Total Sell</dt>
-              <dd id="modal-sell-price" class="font-medium text-green-600"></dd>
+              <dd id="modal-sell-price" class="font-medium"></dd>
             </dl>
             <dl class="flex justify-between border-t pt-2">
               <dt class="text-gray-500">Expected profits</dt>
@@ -409,17 +409,17 @@
           </div> {% endcomment %}
 
         </div>
-
+{% comment %} 
     <div class="flex items-start mb-6">
         <label for="remember" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-500">
           By clicking the "Order Now" button, you agree to the site's policy and terms.
         </label>
-    </div>
+    </div> {% endcomment %}
 
 
-        <button onclick="buyProduct(this)" data-product-id="" data-group-id=""
+        <button onclick="buyProduct(this)" id="buy-product-btn" data-product-id="" data-group-id=""
           class="mt-4 mx-auto block text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-5 py-2.5 disabled:bg-gray-400 disabled:cursor-not-allowed">
-          Order Now
+            Order Now
         </button>
       </div>
 
@@ -437,7 +437,8 @@
 
 window.addEventListener('load', function() {
   const is_done = '{{is_done}}'
-  if (is_done == 'True') {
+  const has_withdrawn = '{{request.user.profile.has_withdrawn}}'
+  if (is_done == 'True' && has_withdrawn == 'False') {
       showComplitionModal();
   }
 });

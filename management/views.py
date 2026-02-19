@@ -666,7 +666,8 @@ def approveWithdrawal(request, tx_id):
         messages.error(request, "الرصيد غير كافٍ لاعتماد السحب.")
         return redirect('management:withdrawals')
 
-    profile.balance -= tx.amount
+    profile.disable_ordering_unitl_withdrawal = False
+    profile.has_withdrawn = True
     profile.save()
 
     tx.status = 'approved'
@@ -679,6 +680,7 @@ def approveWithdrawal(request, tx_id):
 @require_POST
 def rejectWithdrawal(request, tx_id):
     tx = get_object_or_404(Transaction, id=tx_id, transaction_type='withdraw')
+    profile = tx.user.profile
     if tx.status != 'pending':
         messages.info(request, "هذه العملية تمت معالجتها مسبقًا.")
         return redirect('management:withdrawals')
@@ -686,6 +688,8 @@ def rejectWithdrawal(request, tx_id):
     tx.status = 'rejected'
     tx.processed_at = timezone.now()
     tx.save()
+    profile.balance += tx.amount
+    profile.save()
     messages.success(request, "تم رفض السحب.")
     return redirect('management:withdrawals')
 

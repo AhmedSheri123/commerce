@@ -128,6 +128,7 @@ class ProductGroupModel(models.Model):
         for row in suggestion:
             row["line_total"] = row["product"].price * row["quantity"]
 
+        print(suggestion, " || ", current_total)
         return suggestion, current_total
 
                 
@@ -194,3 +195,69 @@ class UserProgress(models.Model):
         if all_stages == 0:
             return 0
         return round((total_stages / all_stages) * 100, 0)
+
+
+class ProductGroupSuggestion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="group_suggestions")
+    product_group = models.ForeignKey(ProductGroupModel, on_delete=models.CASCADE, related_name="suggestions")
+    rows = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "product_group")
+
+    def __str__(self):
+        return f"{self.user.username} - group {self.product_group_id}"
+
+    @staticmethod
+    def serialize_suggestion(suggestion):
+        return [{"product_id": row["product"].id, "quantity": int(row["quantity"])} for row in suggestion]
+
+    @staticmethod
+    def deserialize_suggestion(rows):
+        if not rows:
+            return []
+
+        product_ids = [int(row["product_id"]) for row in rows if row.get("product_id")]
+        products_map = {p.id: p for p in ProductModel.objects.filter(id__in=product_ids)}
+        suggestion = []
+        for row in rows:
+            product = products_map.get(int(row["product_id"]))
+            if not product:
+                continue
+            qty = int(row.get("quantity") or 0)
+            if qty <= 0:
+                continue
+            suggestion.append({"product": product, "quantity": qty, "line_total": product.price * qty})
+        return suggestion
+
+    @staticmethod
+    def build_suggestion_for_group(group):
+        if group.target_total_price and group.products_count:
+            return ProductGroupModel.suggest_items_for_target(
+                target_total=group.target_total_price,
+                products_count=group.products_count,
+            )
+
+        random_product = ProductModel.objects.order_by("?").first()
+        if not random_product:
+            return [], Decimal("0")
+        return [{"product": random_product, "quantity": 1, "line_total": random_product.price}], random_product.price
+
+    @classmethod
+    def get_or_create_suggestion(cls, user, group):
+        saved = cls.objects.filter(user=user, product_group=group).first()
+        suggestion = cls.deserialize_suggestion(saved.rows if saved else None)
+        if suggestion:
+            total = sum((row["line_total"] for row in suggestion), Decimal("0"))
+            return suggestion, total
+
+        suggestion, total = cls.build_suggestion_for_group(group)
+        if suggestion:
+            cls.objects.update_or_create(
+                user=user,
+                product_group=group,
+                defaults={"rows": cls.serialize_suggestion(suggestion)},
+            )
+        return suggestion, total
