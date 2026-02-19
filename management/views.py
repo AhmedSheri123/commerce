@@ -305,7 +305,7 @@ def ViewProductGroups(request, category_id):
 
 def addProductGroup(request, category_id):
     category = get_object_or_404(CategoryModel, id=category_id)
-    products = ProductModel.objects.filter(category_id=category_id).order_by('name')
+    products = ProductModel.objects.filter().order_by('name')
     suggestion = []
     suggested_total = None
     suggested_sell_total = None
@@ -377,7 +377,7 @@ def addProductGroup(request, category_id):
 def editProductGroup(request, category_id, group_id):
     category = get_object_or_404(CategoryModel, id=category_id)
     group = get_object_or_404(ProductGroupModel, id=group_id, category_id=category_id)
-    products = ProductModel.objects.filter(category_id=category_id).order_by('name')
+    products = ProductModel.objects.filter().order_by('name')
     suggestion = []
     suggested_total = None
     suggested_sell_total = None
