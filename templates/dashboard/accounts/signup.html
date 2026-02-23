@@ -29,14 +29,16 @@
                 name="username"
                 type="tel"
                 inputmode="numeric"
-                pattern="[0-9]{8,15}"
+                pattern="[1-9][0-9]{7,14}"
                 minlength="8"
                 maxlength="15"
                 oninput="this.value = this.value.replace(/\D/g, '')"
-                title="Enter a valid phone number (8 to 15 digits)"
+                placeholder="Example: 966512345678"
+                title="Enter a real phone number with country code (8 to 15 digits)"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 required=""
             />
+            <p class="mt-1 text-xs text-gray-500">Use international format without +, for example: 966512345678</p>
         </div>
 
 

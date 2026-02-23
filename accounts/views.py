@@ -23,6 +23,12 @@ from .models import (
 from accounts.models import Transaction
 from django.db import models
 from management.models import SupportContact
+
+try:
+    import phonenumbers
+except Exception:  # pragma: no cover - optional runtime dependency
+    phonenumbers = None
+
 # Create your views here.
 
 
@@ -52,6 +58,54 @@ def _get_client_ip(request):
         except ValueError:
             continue
     return None
+
+
+def _normalize_phone_digits(raw_phone: str) -> str:
+    return "".join(ch for ch in str(raw_phone or "") if ch.isdigit())
+
+
+def _normalize_login_username(raw_username: str) -> str:
+    value = str(raw_username or "").strip()
+    digits = _normalize_phone_digits(value)
+    if not digits:
+        return value
+
+    if value.isdigit() or value.startswith("+") or any(ch in value for ch in (" ", "-", "(", ")")):
+        return digits
+    return value
+
+
+def _validate_real_phone_number(raw_phone: str) -> tuple[str | None, str | None]:
+    digits = _normalize_phone_digits(raw_phone)
+    if not digits:
+        return None, "Phone number is required."
+
+    if digits.startswith("00"):
+        digits = digits[2:]
+
+    if not (8 <= len(digits) <= 15):
+        return None, "Phone number must be 8 to 15 digits."
+
+    # International numbers should include country code and not start with 0.
+    if digits.startswith("0"):
+        return None, "Enter phone number with country code (without leading 0)."
+
+    if phonenumbers is None:
+        # Fallback validation if phonenumbers is not installed on the server.
+        return digits, None
+
+    try:
+        parsed = phonenumbers.parse(f"+{digits}", None)
+    except Exception:
+        return None, "Enter a valid real phone number with country code."
+
+    if not phonenumbers.is_possible_number(parsed) or not phonenumbers.is_valid_number(parsed):
+        return None, "Enter a valid real phone number with country code."
+
+    normalized = _normalize_phone_digits(
+        phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+    )
+    return normalized, None
 
 
 @login_required
@@ -118,7 +172,7 @@ def Login(request):
         return redirect('home:index')
     next_page = request.GET.get('next', None)
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username = _normalize_login_username(request.POST.get('username'))
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -145,14 +199,15 @@ def signup(request):
         return redirect('home:index')
 
     if request.method == 'POST':
-        username = (request.POST.get('username') or '').strip()
+        username_raw = (request.POST.get('username') or '').strip()
         invite_code = (request.POST.get('invite_code') or '').strip()
         password = request.POST.get('password') or ''
         confirm_password = request.POST.get('confirm_password') or ''
         referrer_profiles = UserProfile.objects.filter(invite_code=invite_code)
 
-        if not username.isdigit() or not (8 <= len(username) <= 15):
-            messages.error(request, "Phone number must contain digits only and be 8 to 15 digits.")
+        username, phone_error = _validate_real_phone_number(username_raw)
+        if phone_error:
+            messages.error(request, phone_error)
             return redirect('accounts:signup')
 
         if len(password) < 6:
