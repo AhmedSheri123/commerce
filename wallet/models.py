@@ -106,6 +106,45 @@ class Relayer(models.Model):
         return bool(self.address and self.private_key and self.is_enabled)
 
 
+class WalletServiceSetting(models.Model):
+    class DepositSource(models.TextChoices):
+        AUTO = "auto", "Auto (RPC preferred)"
+        RPC = "rpc", "RPC only"
+        BSCSCAN = "bscscan", "BscScan only"
+
+    bep20_rpc_url = models.CharField(max_length=500, blank=True)
+    fallback_bep20_rpc_url = models.CharField(max_length=500, blank=True)
+    bep20_rpc_fallback_urls = models.TextField(blank=True)
+
+    bep20_autocheck_lookback_blocks = models.PositiveIntegerField(default=1000)
+    bep20_initial_lookback_blocks = models.PositiveIntegerField(default=10000)
+    bep20_autocheck_chunk_size = models.PositiveIntegerField(default=200)
+    bep20_relayer_reserve_bnb = models.DecimalField(max_digits=20, decimal_places=8, default=Decimal("0.01"))
+
+    bscscan_api_url = models.CharField(max_length=500, default="https://api.etherscan.io/v2/api")
+    bscscan_api_key = models.CharField(max_length=255, blank=True)
+    bep20_deposit_source = models.CharField(
+        max_length=20,
+        choices=DepositSource.choices,
+        default=DepositSource.RPC,
+    )
+    bep20_bscscan_offset = models.PositiveIntegerField(default=200)
+    bep20_bscscan_max_pages = models.PositiveIntegerField(default=5)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Wallet Service Setting"
+        verbose_name_plural = "Wallet Service Settings"
+
+    def __str__(self):
+        return "Wallet Service Settings"
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class MainWallet(models.Model):
     network = models.CharField(max_length=12, choices=Wallet.Network.choices, unique=True)
     address = models.CharField(max_length=255, blank=True)

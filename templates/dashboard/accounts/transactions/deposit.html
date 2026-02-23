@@ -382,8 +382,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (networkSelect) {
-    networkSelect.addEventListener("change", function () {
-      loadNetworkData(networkSelect.value, { keepCheckMessage: false });
+    networkSelect.addEventListener("change", async function () {
+      await loadNetworkData(networkSelect.value, { keepCheckMessage: false });
+      if (autoCheckSupported && addressInput && addressInput.value) {
+        setTimeout(function () {
+          runDepositCheck(true);
+        }, 100);
+      }
     });
   }
 
@@ -393,11 +398,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (autoCheckSupported) {
-    setTimeout(function () {
-      runDepositCheck(true);
-    }, 400);
-  }
+  (async function initAutoCheck() {
+    await loadNetworkData(currentNetwork, { keepCheckMessage: false });
+    if (autoCheckSupported && addressInput && addressInput.value) {
+      setTimeout(function () {
+        runDepositCheck(true);
+      }, 100);
+    }
+  })();
 });
 </script>
 

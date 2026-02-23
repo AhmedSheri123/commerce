@@ -19,7 +19,7 @@ from accounts.models import (
 )
 from management.models import SupportContact
 from products.models import UserProgress
-from wallet.models import Wallet, Deposit, Relayer, MainWallet
+from wallet.models import Wallet, Deposit, Relayer, MainWallet, WalletServiceSetting
 from wallet.services import ensure_all_users_wallets, get_relayer_balance_snapshot, sweep_wallet_to_main
 from .forms import (
     UserCreateForm,
@@ -734,12 +734,103 @@ def ViewWalletRelayerSettings(request):
         relayers[network] = relayer
         main_wallet, _ = MainWallet.objects.get_or_create(network=network)
         main_wallets[network] = main_wallet
+    service_settings = WalletServiceSetting.get_solo()
 
     if request.method == "POST":
         config_type = (request.POST.get("config_type") or "relayer").strip().lower()
         network = (request.POST.get("network") or "").strip().lower()
-        if network not in supported_networks:
+        if config_type != "service_settings" and network not in supported_networks:
             messages.error(request, "Invalid wallet network.")
+            return redirect("management:wallet_settings")
+
+        if config_type == "service_settings":
+            bep20_rpc_url = (request.POST.get("bep20_rpc_url") or "").strip()
+            fallback_bep20_rpc_url = (request.POST.get("fallback_bep20_rpc_url") or "").strip()
+            bep20_rpc_fallback_urls = (request.POST.get("bep20_rpc_fallback_urls") or "").strip()
+            bscscan_api_url = (request.POST.get("bscscan_api_url") or "").strip()
+            bscscan_api_key = (request.POST.get("bscscan_api_key") or "").strip()
+            deposit_source = (request.POST.get("bep20_deposit_source") or "").strip().lower()
+
+            lookback_raw = (request.POST.get("bep20_autocheck_lookback_blocks") or "").strip()
+            initial_raw = (request.POST.get("bep20_initial_lookback_blocks") or "").strip()
+            chunk_raw = (request.POST.get("bep20_autocheck_chunk_size") or "").strip()
+            reserve_raw = (request.POST.get("bep20_relayer_reserve_bnb") or "").strip()
+            offset_raw = (request.POST.get("bep20_bscscan_offset") or "").strip()
+            pages_raw = (request.POST.get("bep20_bscscan_max_pages") or "").strip()
+
+            errors = []
+            try:
+                lookback_blocks = int(lookback_raw)
+            except Exception:
+                lookback_blocks = None
+                errors.append("Auto-check lookback blocks must be an integer.")
+
+            try:
+                initial_blocks = int(initial_raw)
+            except Exception:
+                initial_blocks = None
+                errors.append("Initial lookback blocks must be an integer.")
+
+            try:
+                chunk_size = int(chunk_raw)
+            except Exception:
+                chunk_size = None
+                errors.append("Auto-check chunk size must be an integer.")
+
+            try:
+                reserve_bnb = Decimal(reserve_raw)
+            except Exception:
+                reserve_bnb = None
+                errors.append("Relayer reserve (BNB) must be a valid number.")
+
+            try:
+                bscscan_offset = int(offset_raw)
+            except Exception:
+                bscscan_offset = None
+                errors.append("BscScan offset must be an integer.")
+
+            try:
+                bscscan_max_pages = int(pages_raw)
+            except Exception:
+                bscscan_max_pages = None
+                errors.append("BscScan max pages must be an integer.")
+
+            if lookback_blocks is not None and lookback_blocks <= 0:
+                errors.append("Auto-check lookback blocks must be greater than 0.")
+            if initial_blocks is not None and initial_blocks <= 0:
+                errors.append("Initial lookback blocks must be greater than 0.")
+            if chunk_size is not None and chunk_size <= 0:
+                errors.append("Auto-check chunk size must be greater than 0.")
+            if reserve_bnb is not None and reserve_bnb < 0:
+                errors.append("Relayer reserve (BNB) cannot be negative.")
+            if bscscan_offset is not None and bscscan_offset <= 0:
+                errors.append("BscScan offset must be greater than 0.")
+            if bscscan_max_pages is not None and bscscan_max_pages <= 0:
+                errors.append("BscScan max pages must be greater than 0.")
+            if deposit_source not in {"auto", "rpc", "bscscan"}:
+                errors.append("Deposit source must be one of: auto, rpc, bscscan.")
+            if not bscscan_api_url:
+                errors.append("BscScan API URL cannot be empty.")
+
+            if errors:
+                messages.error(request, " ".join(errors))
+                return redirect("management:wallet_settings")
+
+            service_settings.bep20_rpc_url = bep20_rpc_url
+            service_settings.fallback_bep20_rpc_url = fallback_bep20_rpc_url
+            service_settings.bep20_rpc_fallback_urls = bep20_rpc_fallback_urls
+            service_settings.bep20_autocheck_lookback_blocks = lookback_blocks
+            service_settings.bep20_initial_lookback_blocks = initial_blocks
+            service_settings.bep20_autocheck_chunk_size = chunk_size
+            service_settings.bep20_relayer_reserve_bnb = reserve_bnb
+            service_settings.bscscan_api_url = bscscan_api_url
+            service_settings.bscscan_api_key = bscscan_api_key
+            service_settings.bep20_deposit_source = deposit_source
+            service_settings.bep20_bscscan_offset = bscscan_offset
+            service_settings.bep20_bscscan_max_pages = bscscan_max_pages
+            service_settings.save()
+
+            messages.success(request, "BEP20 service settings updated.")
             return redirect("management:wallet_settings")
 
         if config_type == "main_wallet":
@@ -760,11 +851,9 @@ def ViewWalletRelayerSettings(request):
         relayer = relayers[network]
         address = (request.POST.get("address") or "").strip()
         private_key = (request.POST.get("private_key") or "").strip()
-        bscscan_api_key = (request.POST.get("bscscan_api_key") or "").strip()
         trongrid_api_key = (request.POST.get("trongrid_api_key") or "").strip()
         min_native_raw = (request.POST.get("min_native_balance") or "").strip()
         topup_raw = (request.POST.get("topup_amount") or "").strip()
-        reserve_native_raw = (request.POST.get("reserve_native_balance") or "").strip()
         is_enabled = request.POST.get("is_enabled") == "on"
 
         errors = []
@@ -780,20 +869,10 @@ def ViewWalletRelayerSettings(request):
             topup_amount = None
             errors.append("Top-up amount must be a valid number.")
 
-        reserve_native_balance = relayer.reserve_native_balance
-        if network == Wallet.Network.BEP20:
-            try:
-                reserve_native_balance = Decimal(reserve_native_raw)
-            except Exception:
-                reserve_native_balance = None
-                errors.append("Relayer reserve balance must be a valid number.")
-
         if min_native_balance is not None and min_native_balance < 0:
             errors.append("Min native balance cannot be negative.")
         if topup_amount is not None and topup_amount <= 0:
             errors.append("Top-up amount must be greater than zero.")
-        if network == Wallet.Network.BEP20 and reserve_native_balance is not None and reserve_native_balance < 0:
-            errors.append("Relayer reserve balance cannot be negative.")
 
         if errors:
             messages.error(request, " ".join(errors))
@@ -804,9 +883,6 @@ def ViewWalletRelayerSettings(request):
             relayer.private_key = private_key
         if network == Wallet.Network.TRON:
             relayer.trongrid_api_key = trongrid_api_key
-        if network == Wallet.Network.BEP20:
-            relayer.bscscan_api_key = bscscan_api_key
-            relayer.reserve_native_balance = reserve_native_balance
         relayer.min_native_balance = min_native_balance
         relayer.topup_amount = topup_amount
         relayer.is_enabled = is_enabled
@@ -823,6 +899,8 @@ def ViewWalletRelayerSettings(request):
             "bep20_relayer": relayers[Wallet.Network.BEP20],
             "tron_main_wallet": main_wallets[Wallet.Network.TRON],
             "bep20_main_wallet": main_wallets[Wallet.Network.BEP20],
+            "service_settings": service_settings,
+            "deposit_source_choices": WalletServiceSetting.DepositSource.choices,
         },
     )
 

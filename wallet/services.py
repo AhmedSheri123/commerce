@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils import timezone
 
-from wallet.models import Deposit, MainWallet, Relayer, Sweep, Wallet
+from wallet.models import Deposit, MainWallet, Relayer, Sweep, Wallet, WalletServiceSetting
 
 try:
     from tronpy import Tron
@@ -53,11 +53,12 @@ except Exception:
 TRON_ENDPOINT_URI = _env_str("TRON_ENDPOINT_URI", "https://api.trongrid.io")
 TRONGRID_API_KEY = _env_str("TRONGRID_API_KEY", "")
 BEP20_RPC_URL = _env_str("BEP20_RPC_URL", "")
-FALLBACK_BEP20_RPC_URL = _env_str("FALLBACK_BEP20_RPC_URL", "https://bsc-dataseed.binance.org")
+FALLBACK_BEP20_RPC_URL = _env_str("FALLBACK_BEP20_RPC_URL", "https://rpc.ankr.com/bsc")
 BEP20_RPC_FALLBACK_URLS = [
     item.strip()
     for item in _env_str(
         "BEP20_RPC_FALLBACK_URLS",
+        "https://rpc.ankr.com/bsc,"
         "https://bsc-dataseed.binance.org,"
         "https://bsc-dataseed1.binance.org,"
         "https://bsc-dataseed1.defibit.io,"
@@ -81,8 +82,19 @@ try:
     BEP20_RELAYER_RESERVE_BNB_DEFAULT = Decimal(_env_str("BEP20_RELAYER_RESERVE_BNB", "0.01"))
 except Exception:
     BEP20_RELAYER_RESERVE_BNB_DEFAULT = Decimal("0.01")
-BSCSCAN_API_URL = _env_str("BSCSCAN_API_URL", "https://api.bscscan.com/api")
+BSCSCAN_API_URL = _env_str("BSCSCAN_API_URL", "https://api.etherscan.io/v2/api")
 BSCSCAN_API_KEY = _env_str("BSCSCAN_API_KEY", "")
+BSCSCAN_V2_API_URL = _env_str("BSCSCAN_V2_API_URL", "https://api.etherscan.io/v2/api")
+try:
+    BEP20_EXPLORER_CHAIN_ID = int(_env_str("BEP20_EXPLORER_CHAIN_ID", "56"))
+except Exception:
+    BEP20_EXPLORER_CHAIN_ID = 56
+_BEP20_DEPOSIT_SOURCE_RAW = _env_str("BEP20_DEPOSIT_SOURCE", "rpc").lower()
+BEP20_DEPOSIT_SOURCE = (
+    _BEP20_DEPOSIT_SOURCE_RAW
+    if _BEP20_DEPOSIT_SOURCE_RAW in {"auto", "rpc", "bscscan"}
+    else "auto"
+)
 try:
     BEP20_BSCSCAN_OFFSET = int(_env_str("BEP20_BSCSCAN_OFFSET", "200"))
 except Exception:
@@ -91,6 +103,119 @@ try:
     BEP20_BSCSCAN_MAX_PAGES = int(_env_str("BEP20_BSCSCAN_MAX_PAGES", "5"))
 except Exception:
     BEP20_BSCSCAN_MAX_PAGES = 5
+
+
+def _split_rpc_urls(value: str) -> list[str]:
+    text = str(value or "").replace("\n", ",")
+    return [item.strip() for item in text.split(",") if item.strip()]
+
+
+def _get_wallet_service_settings() -> WalletServiceSetting | None:
+    try:
+        return WalletServiceSetting.get_solo()
+    except Exception:
+        return None
+
+
+def _get_bep20_runtime_settings() -> dict[str, Any]:
+    defaults = {
+        "bep20_rpc_url": BEP20_RPC_URL,
+        "fallback_bep20_rpc_url": FALLBACK_BEP20_RPC_URL,
+        "bep20_rpc_fallback_urls": list(BEP20_RPC_FALLBACK_URLS),
+        "autocheck_lookback_blocks": BEP20_AUTOCHECK_LOOKBACK_BLOCKS,
+        "initial_lookback_blocks": BEP20_INITIAL_LOOKBACK_BLOCKS,
+        "autocheck_chunk_size": BEP20_AUTOCHECK_CHUNK_SIZE,
+        "relayer_reserve_bnb": BEP20_RELAYER_RESERVE_BNB_DEFAULT,
+        "bscscan_api_url": BSCSCAN_API_URL,
+        "bscscan_api_key": BSCSCAN_API_KEY,
+        "deposit_source": BEP20_DEPOSIT_SOURCE,
+        "bscscan_offset": BEP20_BSCSCAN_OFFSET,
+        "bscscan_max_pages": BEP20_BSCSCAN_MAX_PAGES,
+    }
+
+    settings = _get_wallet_service_settings()
+    if settings is None:
+        return defaults
+
+    def _safe_int(value: Any, fallback: int, minimum: int = 1) -> int:
+        try:
+            parsed = int(value)
+        except Exception:
+            return fallback
+        if parsed < minimum:
+            return fallback
+        return parsed
+
+    deposit_source = str(settings.bep20_deposit_source or "").strip().lower()
+    if deposit_source not in {"auto", "rpc", "bscscan"}:
+        deposit_source = defaults["deposit_source"]
+    if deposit_source == "auto":
+        # Keep behavior predictable: Auto prefers RPC/Ankr path.
+        deposit_source = "rpc"
+
+    fallback_urls = _split_rpc_urls(settings.bep20_rpc_fallback_urls or "")
+    if not fallback_urls:
+        fallback_urls = list(defaults["bep20_rpc_fallback_urls"])
+
+    reserve_bnb = _safe_decimal(settings.bep20_relayer_reserve_bnb, str(defaults["relayer_reserve_bnb"]))
+    if reserve_bnb < 0:
+        reserve_bnb = defaults["relayer_reserve_bnb"]
+
+    bscscan_api_url = (settings.bscscan_api_url or "").strip() or defaults["bscscan_api_url"]
+
+    return {
+        "bep20_rpc_url": (settings.bep20_rpc_url or "").strip(),
+        "fallback_bep20_rpc_url": (settings.fallback_bep20_rpc_url or "").strip() or defaults["fallback_bep20_rpc_url"],
+        "bep20_rpc_fallback_urls": fallback_urls,
+        "autocheck_lookback_blocks": _safe_int(
+            settings.bep20_autocheck_lookback_blocks,
+            int(defaults["autocheck_lookback_blocks"]),
+            1,
+        ),
+        "initial_lookback_blocks": _safe_int(
+            settings.bep20_initial_lookback_blocks,
+            int(defaults["initial_lookback_blocks"]),
+            1,
+        ),
+        "autocheck_chunk_size": _safe_int(
+            settings.bep20_autocheck_chunk_size,
+            int(defaults["autocheck_chunk_size"]),
+            1,
+        ),
+        "relayer_reserve_bnb": reserve_bnb,
+        "bscscan_api_url": bscscan_api_url,
+        "bscscan_api_key": (settings.bscscan_api_key or "").strip() or defaults["bscscan_api_key"],
+        "deposit_source": deposit_source,
+        "bscscan_offset": _safe_int(settings.bep20_bscscan_offset, int(defaults["bscscan_offset"]), 1),
+        "bscscan_max_pages": _safe_int(settings.bep20_bscscan_max_pages, int(defaults["bscscan_max_pages"]), 1),
+    }
+
+
+def _is_deprecated_v1_payload(payload: Any) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    message = str(payload.get("message") or "").lower()
+    result = str(payload.get("result") or "").lower()
+    combined = f"{message} {result}"
+    return "deprecated v1 endpoint" in combined and "v2" in combined
+
+
+def _explorer_get_with_v2_fallback(api_url: str, params: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    response = requests.get(api_url, params=params, timeout=20)
+    response.raise_for_status()
+    payload = response.json()
+    if not _is_deprecated_v1_payload(payload):
+        return payload, api_url
+
+    v2_url = BSCSCAN_V2_API_URL
+    if (api_url or "").strip().rstrip("/") == (v2_url or "").strip().rstrip("/"):
+        return payload, api_url
+
+    response = requests.get(v2_url, params=params, timeout=20)
+    response.raise_for_status()
+    payload = response.json()
+    return payload, v2_url
+
 
 NETWORK_META: dict[str, dict[str, Any]] = {
     Wallet.Network.TRON: {
@@ -174,13 +299,8 @@ def _get_tron_relayer_api_key() -> str:
 
 
 def _get_bep20_bscscan_api_key() -> str:
-    try:
-        relayer = Relayer.objects.filter(network=Wallet.Network.BEP20).only("bscscan_api_key").first()
-    except Exception:
-        relayer = None
-    if relayer is None:
-        return BSCSCAN_API_KEY
-    return (relayer.bscscan_api_key or "").strip() or BSCSCAN_API_KEY
+    runtime_settings = _get_bep20_runtime_settings()
+    return str(runtime_settings.get("bscscan_api_key") or "").strip()
 
 
 def _get_tron_client():
@@ -223,39 +343,32 @@ def _dedupe_rpc_urls(urls: list[str]) -> list[str]:
     return unique
 
 
-def _get_bep20_relayer_rpc_url() -> str:
-    try:
-        relayer = Relayer.objects.filter(network=Wallet.Network.BEP20).only("rpc_url").first()
-    except Exception:
-        relayer = None
-    if relayer is None:
-        return ""
-    return (relayer.rpc_url or "").strip()
-
-
 def _get_bep20_rpc_candidates() -> list[str]:
+    runtime_settings = _get_bep20_runtime_settings()
     return _dedupe_rpc_urls(
         [
-            _get_bep20_relayer_rpc_url(),
-            BEP20_RPC_URL,
-            FALLBACK_BEP20_RPC_URL,
-            *BEP20_RPC_FALLBACK_URLS,
+            str(runtime_settings.get("bep20_rpc_url") or "").strip(),
+            str(runtime_settings.get("fallback_bep20_rpc_url") or "").strip(),
+            *(runtime_settings.get("bep20_rpc_fallback_urls") or []),
         ]
     )
 
 
-def _get_bep20_client():
+def _get_bep20_client(force_refresh: bool = False, exclude_rpc_urls: list[str] | None = None):
     global _bep20_client, _bep20_client_rpc_url
     if Web3 is None:
         return None
 
     candidates = _get_bep20_rpc_candidates()
+    if exclude_rpc_urls:
+        blocked = {(item or "").strip() for item in exclude_rpc_urls if (item or "").strip()}
+        candidates = [url for url in candidates if url not in blocked]
     if not candidates:
         _bep20_client = None
         _bep20_client_rpc_url = ""
         return None
 
-    if _bep20_client is not None and _bep20_client_rpc_url in candidates:
+    if not force_refresh and _bep20_client is not None and _bep20_client_rpc_url in candidates:
         return _bep20_client
 
     _bep20_client = None
@@ -452,11 +565,16 @@ def get_user_wallet(user: User, network: str) -> Wallet | None:
 def get_or_create_relayer(network: str) -> Relayer:
     selected_network = normalize_network(network)
     prefix = _network_env_prefix(selected_network)
-    default_rpc_url = BEP20_RPC_URL if selected_network == Wallet.Network.BEP20 else ""
-    default_bscscan_api_key = BSCSCAN_API_KEY if selected_network == Wallet.Network.BEP20 else ""
+    runtime_settings = _get_bep20_runtime_settings()
+    default_rpc_url = str(runtime_settings.get("bep20_rpc_url") or "") if selected_network == Wallet.Network.BEP20 else ""
+    default_bscscan_api_key = (
+        str(runtime_settings.get("bscscan_api_key") or "")
+        if selected_network == Wallet.Network.BEP20
+        else ""
+    )
     default_trongrid_api_key = TRONGRID_API_KEY if selected_network == Wallet.Network.TRON else ""
     default_reserve_native = (
-        BEP20_RELAYER_RESERVE_BNB_DEFAULT
+        _safe_decimal(runtime_settings.get("relayer_reserve_bnb"), str(BEP20_RELAYER_RESERVE_BNB_DEFAULT))
         if selected_network == Wallet.Network.BEP20
         else Decimal("0")
     )
@@ -640,7 +758,12 @@ def _resolve_bep20_scan_start_block(
     if cursor > 0:
         return cursor + 1
 
-    initial_lookback = max(BEP20_INITIAL_LOOKBACK_BLOCKS, BEP20_AUTOCHECK_LOOKBACK_BLOCKS, 1)
+    runtime_settings = _get_bep20_runtime_settings()
+    initial_lookback = max(
+        int(runtime_settings.get("initial_lookback_blocks") or 1),
+        int(runtime_settings.get("autocheck_lookback_blocks") or 1),
+        1,
+    )
     return max(0, latest - initial_lookback + 1)
 
 
@@ -701,6 +824,59 @@ def _get_last_confirmed_bep20_block(wallet: Wallet) -> int:
     return _extract_block_number(last_dep.raw_payload if last_dep else None)
 
 
+def _get_bep20_latest_block_via_bscscan() -> int:
+    runtime_settings = _get_bep20_runtime_settings()
+    bscscan_api_url = str(runtime_settings.get("bscscan_api_url") or "").strip() or BSCSCAN_API_URL
+    params: dict[str, Any] = {
+        "chainid": str(BEP20_EXPLORER_CHAIN_ID),
+        "module": "proxy",
+        "action": "eth_blockNumber",
+    }
+    bscscan_api_key = _get_bep20_bscscan_api_key()
+    if bscscan_api_key:
+        params["apikey"] = bscscan_api_key
+
+    try:
+        payload, _ = _explorer_get_with_v2_fallback(bscscan_api_url, params)
+    except Exception:
+        return 0
+
+    raw_block = payload.get("result")
+    if raw_block is None:
+        return 0
+
+    text = str(raw_block).strip()
+    if not text:
+        return 0
+
+    try:
+        if text.lower().startswith("0x"):
+            return int(text, 16)
+        return int(text)
+    except Exception:
+        return 0
+
+
+def _resolve_bep20_bscscan_start_block(last_confirmed_block: int, last_scanned_block: int) -> tuple[int, int]:
+    confirmed = max(int(last_confirmed_block or 0), 0)
+    scanned = max(int(last_scanned_block or 0), 0)
+    cursor = max(confirmed, scanned)
+    latest = max(_get_bep20_latest_block_via_bscscan(), 0)
+    if cursor > 0:
+        return cursor + 1, latest
+
+    if latest > 0:
+        runtime_settings = _get_bep20_runtime_settings()
+        initial_lookback = max(
+            int(runtime_settings.get("initial_lookback_blocks") or 1),
+            int(runtime_settings.get("autocheck_lookback_blocks") or 1),
+            1,
+        )
+        return max(0, latest - initial_lookback + 1), latest
+
+    return 0, 0
+
+
 def _check_bep20_deposits_via_bscscan(
     wallet: Wallet,
     start_block: int = 0,
@@ -718,13 +894,16 @@ def _check_bep20_deposits_via_bscscan(
         result["message"] = "BEP20 USDT contract is not configured."
         return result
 
-    offset = max(BEP20_BSCSCAN_OFFSET, 50)
-    max_pages = max(BEP20_BSCSCAN_MAX_PAGES, 1)
+    runtime_settings = _get_bep20_runtime_settings()
+    bscscan_api_url = str(runtime_settings.get("bscscan_api_url") or "").strip() or BSCSCAN_API_URL
+    offset = max(int(runtime_settings.get("bscscan_offset") or 1), 50)
+    max_pages = max(int(runtime_settings.get("bscscan_max_pages") or 1), 1)
     normalized_address = address.lower()
     bscscan_api_key = _get_bep20_bscscan_api_key()
     page = 1
     while page <= max_pages:
         params: dict[str, Any] = {
+            "chainid": str(BEP20_EXPLORER_CHAIN_ID),
             "module": "account",
             "action": "tokentx",
             "address": address,
@@ -739,9 +918,8 @@ def _check_bep20_deposits_via_bscscan(
             params["apikey"] = bscscan_api_key
 
         try:
-            response = requests.get(BSCSCAN_API_URL, params=params, timeout=20)
-            response.raise_for_status()
-            payload = response.json()
+            payload, used_api_url = _explorer_get_with_v2_fallback(bscscan_api_url, params)
+            bscscan_api_url = used_api_url
         except Exception as exc:
             result["ok"] = False
             result["message"] = f"BscScan fallback failed: {exc}"
@@ -752,6 +930,13 @@ def _check_bep20_deposits_via_bscscan(
         if status == "0":
             text = str(raw_result or payload.get("message") or "").strip()
             lowered = text.lower()
+            if "deprecated v1 endpoint" in lowered:
+                result["ok"] = False
+                result["message"] = (
+                    "Explorer V1 endpoint is deprecated. "
+                    "Set BSCSCAN_API_URL to https://api.etherscan.io/v2/api and use an Etherscan API key."
+                )
+                return result
             if "no transactions found" in lowered:
                 _set_deposit_result_message(result)
                 return result
@@ -832,16 +1017,55 @@ def _check_bep20_deposits_via_bscscan(
     return result
 
 
+def _run_bep20_deposits_via_bscscan(
+    wallet: Wallet,
+    start_block: int = 0,
+    end_block: int | None = None,
+) -> dict[str, Any]:
+    result = _check_bep20_deposits_via_bscscan(wallet, start_block=start_block, end_block=end_block)
+    if not result.get("ok"):
+        return result
+
+    latest_block = 0
+    if end_block is not None:
+        latest_block = max(int(end_block or 0), 0)
+    else:
+        latest_block = max(_get_bep20_latest_block_via_bscscan(), 0)
+
+    if latest_block > 0:
+        _update_wallet_last_scanned_block(wallet, latest_block)
+
+    return result
+
+
 def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
     result = {"ok": True, "created": 0, "processed": 0, "created_amount": Decimal("0"), "message": ""}
     last_processed_block = _get_last_confirmed_bep20_block(wallet)
     last_scanned_block = max(int(getattr(wallet, "last_scanned_block", 0) or 0), 0)
+    runtime_settings = _get_bep20_runtime_settings()
+    scan_source = str(runtime_settings.get("deposit_source") or "auto").strip().lower()
+
+    if scan_source == "bscscan":
+        fallback_start, fallback_latest = _resolve_bep20_bscscan_start_block(
+            last_confirmed_block=last_processed_block,
+            last_scanned_block=last_scanned_block,
+        )
+        fallback_end = fallback_latest if fallback_latest > 0 else None
+        return _run_bep20_deposits_via_bscscan(wallet, start_block=fallback_start, end_block=fallback_end)
 
     client = _get_bep20_client()
     if client is None:
-        cursor_block = max(last_processed_block, last_scanned_block)
-        fallback_start = cursor_block + 1 if cursor_block > 0 else 0
-        return _check_bep20_deposits_via_bscscan(wallet, start_block=fallback_start)
+        if scan_source == "rpc":
+            result["ok"] = False
+            result["message"] = "BEP20 RPC is unavailable. Configure BEP20_RPC_URL in environment."
+            return result
+
+        fallback_start, fallback_latest = _resolve_bep20_bscscan_start_block(
+            last_confirmed_block=last_processed_block,
+            last_scanned_block=last_scanned_block,
+        )
+        fallback_end = fallback_latest if fallback_latest > 0 else None
+        return _run_bep20_deposits_via_bscscan(wallet, start_block=fallback_start, end_block=fallback_end)
 
     token_address = _to_checksum_address(client, BEP20_USDT_CONTRACT)
     wallet_address = _to_checksum_address(client, wallet.address)
@@ -853,9 +1077,17 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
     try:
         latest_block = int(client.eth.block_number)
     except Exception as exc:
-        cursor_block = max(last_processed_block, last_scanned_block)
-        fallback_start = cursor_block + 1 if cursor_block > 0 else 0
-        fallback = _check_bep20_deposits_via_bscscan(wallet, start_block=fallback_start)
+        if scan_source == "rpc":
+            result["ok"] = False
+            result["message"] = f"Failed to read latest BEP20 block: {exc}"
+            return result
+
+        fallback_start, fallback_latest = _resolve_bep20_bscscan_start_block(
+            last_confirmed_block=last_processed_block,
+            last_scanned_block=last_scanned_block,
+        )
+        fallback_end = fallback_latest if fallback_latest > 0 else None
+        fallback = _run_bep20_deposits_via_bscscan(wallet, start_block=fallback_start, end_block=fallback_end)
         if fallback.get("ok"):
             return fallback
         result["ok"] = False
@@ -873,8 +1105,8 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
         _update_wallet_last_scanned_block(wallet, latest_block)
         return result
 
-    chunk_size = max(BEP20_AUTOCHECK_CHUNK_SIZE, 50)
-    min_chunk_size = 50
+    chunk_size = max(int(runtime_settings.get("autocheck_chunk_size") or 1), 1)
+    min_chunk_size = 1 if scan_source == "rpc" else 50
     transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
     to_topic = _topic_address(wallet_address)
 
@@ -899,8 +1131,12 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
                 if ("limit exceeded" in error_text or "-32005" in error_text) and current_chunk > min_chunk_size:
                     current_chunk = max(min_chunk_size, current_chunk // 2)
                     continue
-                if "limit exceeded" in error_text or "-32005" in error_text:
-                    fallback = _check_bep20_deposits_via_bscscan(wallet, start_block=current_from, end_block=latest_block)
+                if ("limit exceeded" in error_text or "-32005" in error_text) and scan_source != "rpc":
+                    fallback = _run_bep20_deposits_via_bscscan(
+                        wallet,
+                        start_block=current_from,
+                        end_block=latest_block,
+                    )
                     if fallback.get("ok"):
                         result["created"] += int(fallback.get("created", 0) or 0)
                         result["processed"] += int(fallback.get("processed", 0) or 0)
@@ -909,11 +1145,36 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
                             + _safe_decimal(fallback.get("created_amount", "0"))
                         )
                         _set_deposit_result_message(result)
-                        _update_wallet_last_scanned_block(wallet, latest_block)
                         return result
                     result["ok"] = False
                     result["message"] = (
                         f"Failed to scan BEP20 logs and BscScan fallback: {fallback.get('message', 'unknown error')}"
+                    )
+                    return result
+                if "limit exceeded" in error_text or "-32005" in error_text:
+                    if scan_source == "rpc":
+                        previous_rpc_url = str(_bep20_client_rpc_url or "").strip()
+                        switched_client = _get_bep20_client(
+                            force_refresh=True,
+                            exclude_rpc_urls=[previous_rpc_url] if previous_rpc_url else None,
+                        )
+                        switched_rpc_url = str(_bep20_client_rpc_url or "").strip()
+                        if switched_client is not None and switched_rpc_url and switched_rpc_url != previous_rpc_url:
+                            client = switched_client
+                            token_address = _to_checksum_address(client, BEP20_USDT_CONTRACT)
+                            wallet_address = _to_checksum_address(client, wallet.address)
+                            if not token_address or not wallet_address:
+                                result["ok"] = False
+                                result["message"] = "BEP20 contract or wallet address is invalid."
+                                return result
+                            transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
+                            to_topic = _topic_address(wallet_address)
+                            continue
+
+                    result["ok"] = False
+                    result["message"] = (
+                        f"BEP20 RPC returned range/limit error at chunk={current_chunk}. "
+                        "Reduce chunk size or use another RPC endpoint."
                     )
                     return result
                 result["ok"] = False
@@ -1119,10 +1380,12 @@ def _topup_bep20_gas(wallet: Wallet) -> dict[str, Any]:
         gas_price = int(client.eth.gas_price)
         relayer_balance_wei = int(client.eth.get_balance(relayer_address))
         gas_limit = 21000
-        reserve_native_balance = _safe_decimal(
-            getattr(relayer, "reserve_native_balance", BEP20_RELAYER_RESERVE_BNB_DEFAULT),
+        runtime_settings = _get_bep20_runtime_settings()
+        reserve_default = _safe_decimal(
+            runtime_settings.get("relayer_reserve_bnb"),
             str(BEP20_RELAYER_RESERVE_BNB_DEFAULT),
         )
+        reserve_native_balance = _safe_decimal(reserve_default, str(BEP20_RELAYER_RESERVE_BNB_DEFAULT))
         reserve_wei = int(max(reserve_native_balance, Decimal("0")) * Decimal("1000000000000000000"))
         value_wei = _calculate_affordable_native_transfer_wei(
             sender_balance_wei=relayer_balance_wei,
