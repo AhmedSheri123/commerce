@@ -6,10 +6,10 @@ from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductMode
 class PlatformForm(forms.ModelForm):
     class Meta:
         model = PlatformModel
-        fields = ["name", "show_only_from_not_verified_source", "description", "image"]
+        fields = ["name", "show_only_from_not_verified_source", "image", 'msg']
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
-            "description": forms.Textarea(attrs={"class": "form-textarea"}),
+            "msg": forms.Textarea(attrs={"class": "form-textarea"}),
             "show_only_from_not_verified_source": forms.CheckboxInput(attrs={"class": "border border-gray-300 rounded"}),
             "image": forms.ClearableFileInput(attrs={"class": "form-file-input"}),
         }

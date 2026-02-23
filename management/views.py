@@ -12,8 +12,6 @@ from products.models import ProductModel, CategoryModel, PlatformModel, ProductG
 from accounts.models import (
     UserProfile,
     Transaction,
-    Wallet,
-    Deposit,
     SurveyQuestion,
     SurveyOption,
     UserSurveyAnswer,
@@ -21,6 +19,8 @@ from accounts.models import (
 )
 from management.models import SupportContact
 from products.models import UserProgress
+from wallet.models import Wallet, Deposit, Relayer, MainWallet
+from wallet.services import ensure_all_users_wallets, get_relayer_balance_snapshot, sweep_wallet_to_main
 from .forms import (
     UserCreateForm,
     UserUpdateForm,
@@ -464,13 +464,12 @@ def deleteProductGroup(request, category_id, group_id):
 def ViewUsers(request):
     users = User.objects.select_related(
         'profile',
-        'wallet',
         'progress',
         'progress__product_group',
         'progress__product_group__category',
         'progress__product_group__category__platform',
     ).annotate(
-        deposited_total=Sum('wallet__deposits__amount')
+        deposited_total=Sum('wallets__deposits__amount')
     ).all()
 
     q = request.GET.get('q', '').strip()
@@ -721,7 +720,146 @@ def ViewTransfers(request):
 
 #=======================================
 
+@login_required
+def ViewWalletRelayerSettings(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admin users can manage relayer settings.")
+        return redirect("home:index")
+
+    supported_networks = [Wallet.Network.TRON, Wallet.Network.BEP20]
+    relayers = {}
+    main_wallets = {}
+    for network in supported_networks:
+        relayer, _ = Relayer.objects.get_or_create(network=network)
+        relayers[network] = relayer
+        main_wallet, _ = MainWallet.objects.get_or_create(network=network)
+        main_wallets[network] = main_wallet
+
+    if request.method == "POST":
+        config_type = (request.POST.get("config_type") or "relayer").strip().lower()
+        network = (request.POST.get("network") or "").strip().lower()
+        if network not in supported_networks:
+            messages.error(request, "Invalid wallet network.")
+            return redirect("management:wallet_settings")
+
+        if config_type == "main_wallet":
+            main_wallet = main_wallets[network]
+            address = (request.POST.get("address") or "").strip()
+            private_key = (request.POST.get("private_key") or "").strip()
+            is_enabled = request.POST.get("is_enabled") == "on"
+
+            main_wallet.address = address
+            if private_key:
+                main_wallet.private_key = private_key
+            main_wallet.is_enabled = is_enabled
+            main_wallet.save()
+
+            messages.success(request, f"{main_wallet.get_network_display()} main wallet settings updated.")
+            return redirect("management:wallet_settings")
+
+        relayer = relayers[network]
+        address = (request.POST.get("address") or "").strip()
+        private_key = (request.POST.get("private_key") or "").strip()
+        bscscan_api_key = (request.POST.get("bscscan_api_key") or "").strip()
+        trongrid_api_key = (request.POST.get("trongrid_api_key") or "").strip()
+        min_native_raw = (request.POST.get("min_native_balance") or "").strip()
+        topup_raw = (request.POST.get("topup_amount") or "").strip()
+        reserve_native_raw = (request.POST.get("reserve_native_balance") or "").strip()
+        is_enabled = request.POST.get("is_enabled") == "on"
+
+        errors = []
+        try:
+            min_native_balance = Decimal(min_native_raw)
+        except Exception:
+            min_native_balance = None
+            errors.append("Min native balance must be a valid number.")
+
+        try:
+            topup_amount = Decimal(topup_raw)
+        except Exception:
+            topup_amount = None
+            errors.append("Top-up amount must be a valid number.")
+
+        reserve_native_balance = relayer.reserve_native_balance
+        if network == Wallet.Network.BEP20:
+            try:
+                reserve_native_balance = Decimal(reserve_native_raw)
+            except Exception:
+                reserve_native_balance = None
+                errors.append("Relayer reserve balance must be a valid number.")
+
+        if min_native_balance is not None and min_native_balance < 0:
+            errors.append("Min native balance cannot be negative.")
+        if topup_amount is not None and topup_amount <= 0:
+            errors.append("Top-up amount must be greater than zero.")
+        if network == Wallet.Network.BEP20 and reserve_native_balance is not None and reserve_native_balance < 0:
+            errors.append("Relayer reserve balance cannot be negative.")
+
+        if errors:
+            messages.error(request, " ".join(errors))
+            return redirect("management:wallet_settings")
+
+        relayer.address = address
+        if private_key:
+            relayer.private_key = private_key
+        if network == Wallet.Network.TRON:
+            relayer.trongrid_api_key = trongrid_api_key
+        if network == Wallet.Network.BEP20:
+            relayer.bscscan_api_key = bscscan_api_key
+            relayer.reserve_native_balance = reserve_native_balance
+        relayer.min_native_balance = min_native_balance
+        relayer.topup_amount = topup_amount
+        relayer.is_enabled = is_enabled
+        relayer.save()
+
+        messages.success(request, f"{relayer.get_network_display()} relayer settings updated.")
+        return redirect("management:wallet_settings")
+
+    return render(
+        request,
+        "management/wallets/settings.html",
+        {
+            "tron_relayer": relayers[Wallet.Network.TRON],
+            "bep20_relayer": relayers[Wallet.Network.BEP20],
+            "tron_main_wallet": main_wallets[Wallet.Network.TRON],
+            "bep20_main_wallet": main_wallets[Wallet.Network.BEP20],
+        },
+    )
+
+
+@login_required
+def WalletRelayerBalancesApi(request):
+    if not request.user.is_superuser:
+        return JsonResponse({"ok": False, "message": "Forbidden."}, status=403)
+
+    balances = {}
+    for network in (Wallet.Network.TRON, Wallet.Network.BEP20):
+        balances[network] = get_relayer_balance_snapshot(network)
+
+    return JsonResponse({"ok": True, "balances": balances})
+
+
+#=======================================
+
 def ViewWallets(request):
+    if request.method == "POST":
+        wallet_id = request.POST.get("wallet_id")
+        if wallet_id:
+            wallet = get_object_or_404(Wallet, id=wallet_id)
+            result = sweep_wallet_to_main(wallet)
+            if result.get("ok"):
+                messages.success(request, result.get("message", "Sweep completed successfully."))
+            else:
+                messages.error(request, result.get("message", "Sweep failed."))
+            return redirect("management:wallets")
+
+        generated = ensure_all_users_wallets()
+        messages.success(
+            request,
+            f"Wallet sync completed. Users scanned: {generated['users']}, new wallets created: {generated['created_wallets']}.",
+        )
+        return redirect("management:wallets")
+
     wallets = Wallet.objects.select_related('user').all()
 
     q = request.GET.get('q', '').strip()
@@ -731,13 +869,14 @@ def ViewWallets(request):
         wallets = wallets.filter(
             Q(user__username__icontains=q) |
             Q(user__email__icontains=q) |
-            Q(address__icontains=q)
+            Q(address__icontains=q) |
+            Q(network__icontains=q)
         )
 
     if order == 'oldest':
-        wallets = wallets.order_by('created_at')
+        wallets = wallets.order_by('created_at', 'network')
     else:
-        wallets = wallets.order_by('-created_at')
+        wallets = wallets.order_by('-created_at', 'network')
 
     return render(request, 'management/wallets/wallets.html', {
         'wallets': wallets,

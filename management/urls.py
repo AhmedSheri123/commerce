@@ -37,6 +37,8 @@ urlpatterns = [
     path('withdrawals/reject/<int:tx_id>/', views.rejectWithdrawal, name='reject_withdrawal'),
     path('transfers/', views.ViewTransfers, name='transfers'),
 
+    path('wallets/settings/', views.ViewWalletRelayerSettings, name='wallet_settings'),
+    path('wallets/settings/relayer-balances/', views.WalletRelayerBalancesApi, name='wallet_settings_relayer_balances_api'),
     path('wallets/', views.ViewWallets, name='wallets'),
     path('wallets/<int:wallet_id>/deposits/', views.ViewWalletDeposits, name='wallet_deposits'),
     path('deposits/', views.ViewDeposits, name='deposits'),

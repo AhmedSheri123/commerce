@@ -62,17 +62,20 @@ def view_product_ajax(request):
     user = request.user
     profile = user.profile
     platform_id = request.GET.get("platform_id")
+    platform = PlatformModel.objects.get(id=platform_id)
+    platform_msg = platform.msg if platform.msg else None
+    data = {"data": [], "msg": platform_msg}
     if not platform_id:
-        return JsonResponse({"data": []})
+        return JsonResponse(data)
 
     group = _active_group(request.user, platform_id)
     if not group:
-        return JsonResponse({"data": []})
+        return JsonResponse(data)
 
     suggestion, suggested_total = ProductGroupSuggestion.get_or_create_suggestion(user, group)
 
     if not suggestion:
-        return JsonResponse({"data": []})
+        return JsonResponse(data)
 
     products = []
     total_units = sum(int(row["quantity"]) for row in suggestion)
@@ -110,8 +113,9 @@ def view_product_ajax(request):
         "group_profit": float(group_profit),
         "expected_profit": float(group_profit + profile.balance),
         "products": products,
+        
     }
-    return JsonResponse({"data": [payload]})
+    return JsonResponse({"data": [payload], "msg": platform_msg})
 
 
 @login_required

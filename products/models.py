@@ -6,9 +6,10 @@ import random
 
 class PlatformModel(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='platform_images/', null=True, blank=True)
+    msg = models.TextField(blank=True, null=True, verbose_name="رسالة")
     show_only_from_not_verified_source = models.BooleanField(default=False, help_text="اعرض فقط للاشخاص من مصدر غير موثوق؟")
 
     def __str__(self):

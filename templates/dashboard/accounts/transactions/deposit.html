@@ -1,142 +1,404 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block content %}
 
 <div class="min-h-screen">
-  <div class="max-w-5xl mx-auto space-y-8">
-    <!-- Deposit Card -->
-    <div class="bg-white">
-      <div class="px-6 pt-3 text-center space-y-5">
+  <div class="mx-auto max-w-6xl space-y-6 px-3 py-6">
+    <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Deposit Center</h1>
+            <p class="mt-1 text-sm text-slate-500">Select network, copy address, then track confirmations.</p>
+          </div>
+          <span id="check-status" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Idle</span>
+        </div>
+      </div>
 
-        <p class="text-sm text-slate-500 max-w-xl mx-auto">
+      <div class="px-5 py-5">
+        <label for="network-select" class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">Network</label>
+        <select id="network-select" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 focus:border-emerald-400 focus:outline-none">
+          {% for net in network_options %}
+          <option value="{{ net.key }}" {% if net.is_selected %}selected{% endif %}>
+            {{ net.label }} {% if not net.available %}(Not configured){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
 
-        </p>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="space-y-6 lg:col-span-3">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
 
-        <!-- QR -->
-        <div class="flex justify-center">
-          <div class="rounded-xl border border-slate-200 p-2 shadow-sm bg-white">
+
+
+          <div class="mb-3 text-sm font-semibold text-slate-700">Scan QR</div>
+          <div class="flex min-h-72 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-5">
             <img
-              src="data:image/png;base64,{{ qr_code }}"
-              alt="QR Code"
-              class="h-44 w-44"
+              id="deposit-qr-img"
+              src="{% if qr_code %}data:image/png;base64,{{ qr_code }}{% endif %}"
+              alt="Deposit QR"
+              class="h-56 w-56 rounded-xl border border-slate-200 bg-white p-2 {% if not qr_code %}hidden{% endif %}"
             >
+            <div id="deposit-qr-empty" class="text-center text-sm text-slate-500 {% if qr_code %}hidden{% endif %}">
+              QR is unavailable until address is configured.
+            </div>
+          </div>
+
+
+
+          <div class="space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Selected network</div>
+            <div id="selected-network-label" class="text-lg font-semibold text-slate-900">{{ selected_network.label }}</div>
+            <div id="selected-network-standard" class="text-sm text-slate-500">Standard: {{ selected_network.standard }}</div>
+          </div>
+
+          <div id="address-ready-block" class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 {% if not deposit_address %}hidden{% endif %}">
+            <div class="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">User Balance</div>
+              <div id="wallet-balance" class="mt-1 text-sm font-semibold text-emerald-800">{{ wallet_balance }} USDT</div>
+            </div>
+            <div class="text-xs text-slate-500">Deposit address</div>
+            <input
+              id="deposit-address"
+              type="text"
+              class="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+              value="{{ deposit_address }}"
+              readonly
+            >
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                id="copy-address-btn"
+                class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+              >
+                Copy Address
+              </button>
+              <button
+                type="button"
+                id="check-deposit-btn"
+                class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+                {% if not selected_network.auto_check_supported %}disabled{% endif %}
+              >
+                Check Deposits
+              </button>
+            </div>
+            <p id="check-result" class="mt-3 text-xs text-slate-500">
+              {% if selected_network.auto_check_supported %}
+              Auto-check runs in background without blocking page load.
+              {% else %}
+              Auto-check is not currently enabled for this network.
+              {% endif %}
+            </p>
+          </div>
+
+          <div id="address-missing-block" class="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700 {% if deposit_address %}hidden{% endif %}">
+            Deposit address is not configured for this network yet.
           </div>
         </div>
 
-
-<div class="w-full max-w-sm mx-auto">
-    <div class="flex items-center">
-        <div class="relative w-full">
-            <input id="website-url" type="text" aria-describedby="helper-text-explanation" class="bg-gray-50 border border-e-0 border-gray-300 text-gray-500 dark:text-gray-400 text-sm border-s-0 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" value="{{ wallet.address }}" readonly disabled />
-        </div>
-        <button data-tooltip-target="tooltip-website-url" data-copy-to-clipboard-target="website-url" class="shrink-0 z-10 inline-flex items-center py-3 px-4 text-sm font-medium text-center text-white bg-blue-700 rounded-e-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 border border-blue-700 dark:border-blue-600 hover:border-blue-800 dark:hover:border-blue-700" type="button">
-            <span id="default-icon">
-                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
-                    <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z"/>
-                </svg>
-            </span>
-            <span id="success-icon" class="hidden">
-                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
-                </svg>
-            </span>
-        </button>
-        <div id="tooltip-website-url" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700">
-            <span id="default-tooltip-message">Copy link</span>
-            <span id="success-tooltip-message" class="hidden">Copied!</span>
-            <div class="tooltip-arrow" data-popper-arrow></div>
-        </div>
-    </div>
-    <p id="helper-text-explanation" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Send <span class="font-semibold text-slate-700">USDT (TRC20)</span>
-          to the address above, and the deposit will appear automatically after confirmation.
-    </p>
-</div>
-
-
-
-        <a
-          href=""
-          class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-7 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 shadow"
-        >
-          Check Balance
-        </a>
-
-        <p class="text-xs text-slate-400">
-          After the transfer, wait a few minutes then click the check button.
-        </p>
-
+        
       </div>
-    </div>
-
-    <!-- Deposit History -->
-    <div class="space-y-3 p-3">
-
-
-      <div class="overflow-x-auto rounded-2xl bg-white border border-slate-200 shadow-sm">
-
-        <table class="w-full text-sm text-right">
-          <thead class="bg-slate-100 text-slate-700">
-            <tr>
-              <th class="px-5 py-4 font-semibold">Amount</th>
-              <th class="px-5 py-4 font-semibold">Status</th>
-              <th class="px-5 py-4 font-semibold">Creation Date</th>
-              <th class="px-5 py-4 font-semibold">Confirmation Date</th>
-            </tr>
-          </thead>
-
-          <tbody class="divide-y divide-slate-200">
-
-            {% for dep in deposits %}
-            <tr class="hover:bg-slate-50 transition">
-              <td class="px-5 py-4 font-medium text-slate-800">
-                {{ dep.amount }} USDT
-              </td>
-
-              <td class="px-5 py-4">
-                {% if dep.status == "pending" %}
-                  <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                    ⏳ Pending
-                  </span>
-                {% elif dep.status == "confirmed" %}
-                  <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    ✅ Confirmed
-                  </span>
-                {% else %}
-                  <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                    ❌ Rejected
-                  </span>
-                {% endif %}
-              </td>
-
-              <td class="px-5 py-4 text-slate-600">
-                {{ dep.created_at|date:"Y-m-d H:i" }}
-              </td>
-
-              <td class="px-5 py-4 text-slate-600">
-                {% if dep.confirmed_at %}
-                  {{ dep.confirmed_at|date:"Y-m-d H:i" }}
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-            </tr>
-
-            {% empty %}
-            <tr>
-              <td colspan="4" class="px-6 py-10 text-center text-slate-400">
-                No deposits yet
-              </td>
-            </tr>
-            {% endfor %}
-
-          </tbody>
-        </table>
-
-      </div>
-    </div>
 
   </div>
+
+<div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-5 py-4">
+        <h2 class="text-base font-semibold text-slate-900">Deposit History</h2>
+        <span id="history-network-badge" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ selected_network.label }}</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-sm">
+          <thead class="bg-slate-50 text-slate-700">
+            <tr>
+              <th class="px-5 py-4 font-semibold">Network</th>
+              <th class="px-5 py-4 font-semibold">Amount</th>
+              <th class="px-5 py-4 font-semibold">Status</th>
+              <th class="px-5 py-4 font-semibold">Created</th>
+              <th class="px-5 py-4 font-semibold">Confirmed</th>
+            </tr>
+          </thead>
+          <tbody id="deposits-body" class="divide-y divide-slate-200">
+            {% for dep in deposits %}
+            <tr class="transition hover:bg-slate-50">
+              <td class="px-5 py-4 font-medium text-slate-700">{{ dep.get_network_display }}</td>
+              <td class="px-5 py-4 font-medium text-slate-800">{{ dep.amount }} USDT</td>
+              <td class="px-5 py-4">
+                {% if dep.status == "pending" %}
+                <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Pending</span>
+                {% elif dep.status == "confirmed" %}
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Confirmed</span>
+                {% else %}
+                <span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Rejected</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-4 text-slate-600">{{ dep.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="px-5 py-4 text-slate-600">
+                {% if dep.confirmed_at %}
+                {{ dep.confirmed_at|date:"Y-m-d H:i" }}
+                {% else %}
+                -
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-slate-400">No deposits for this network yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
 </div>
 
-{% endblock %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  let currentNetwork = "{{ selected_network_key }}";
+  let autoCheckSupported = {% if selected_network.auto_check_supported %}true{% else %}false{% endif %};
+  const checkApiUrl = "{{ check_api_url }}";
+  const networkApiUrl = "{{ network_api_url }}";
 
+  const networkSelect = document.getElementById("network-select");
+  const selectedNetworkLabel = document.getElementById("selected-network-label");
+  const selectedNetworkStandard = document.getElementById("selected-network-standard");
+  const historyNetworkBadge = document.getElementById("history-network-badge");
+
+  const addressReadyBlock = document.getElementById("address-ready-block");
+  const addressMissingBlock = document.getElementById("address-missing-block");
+  const copyBtn = document.getElementById("copy-address-btn");
+  const addressInput = document.getElementById("deposit-address");
+  const checkBtn = document.getElementById("check-deposit-btn");
+  const checkResult = document.getElementById("check-result");
+  const checkStatus = document.getElementById("check-status");
+  const walletBalance = document.getElementById("wallet-balance");
+
+  const qrImg = document.getElementById("deposit-qr-img");
+  const qrEmpty = document.getElementById("deposit-qr-empty");
+  const depositsBody = document.getElementById("deposits-body");
+
+  function setStatus(text, classes) {
+    if (!checkStatus) return;
+    checkStatus.className = classes;
+    checkStatus.textContent = text;
+  }
+
+  function getCookie(name) {
+    const cookies = document.cookie ? document.cookie.split(";") : [];
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        return decodeURIComponent(cookie.substring(name.length + 1));
+      }
+    }
+    return "";
+  }
+
+  function statusBadgeHtml(status) {
+    if (status === "pending") {
+      return '<span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Pending</span>';
+    }
+    if (status === "confirmed") {
+      return '<span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Confirmed</span>';
+    }
+    return '<span class="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">Rejected</span>';
+  }
+
+  function renderDeposits(deposits) {
+    if (!depositsBody) return;
+    if (!deposits || deposits.length === 0) {
+      depositsBody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400">No deposits for this network yet.</td></tr>';
+      return;
+    }
+
+    depositsBody.innerHTML = deposits.map(function (dep) {
+      return [
+        '<tr class="transition hover:bg-slate-50">',
+        '<td class="px-5 py-4 font-medium text-slate-700">' + dep.network + '</td>',
+        '<td class="px-5 py-4 font-medium text-slate-800">' + dep.amount + ' USDT</td>',
+        '<td class="px-5 py-4">' + statusBadgeHtml(dep.status) + '</td>',
+        '<td class="px-5 py-4 text-slate-600">' + dep.created_at + '</td>',
+        '<td class="px-5 py-4 text-slate-600">' + dep.confirmed_at + '</td>',
+        '</tr>'
+      ].join("");
+    }).join("");
+  }
+
+  async function loadNetworkData(network, options) {
+    const keepCheckMessage = !!(options && options.keepCheckMessage);
+    const checkMessage = options && options.checkMessage ? options.checkMessage : "";
+
+    setStatus(
+      "Switching",
+      "inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+    );
+
+    try {
+      const body = new URLSearchParams({ network: network }).toString();
+      const response = await fetch(networkApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": getCookie("csrftoken"),
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: body
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "Failed to load network data.");
+      }
+
+      currentNetwork = data.network;
+      const url = new URL(window.location.href);
+      url.searchParams.set("network", currentNetwork);
+      window.history.replaceState({}, "", url.toString());
+
+      if (selectedNetworkLabel) selectedNetworkLabel.textContent = data.selected_network.label;
+      if (selectedNetworkStandard) selectedNetworkStandard.textContent = "Standard: " + data.selected_network.standard;
+      if (historyNetworkBadge) historyNetworkBadge.textContent = data.selected_network.label;
+      if (walletBalance) walletBalance.textContent = (data.wallet_balance || "0") + " USDT";
+
+      if (addressInput) addressInput.value = data.deposit_address || "";
+
+      if (data.deposit_address) {
+        addressReadyBlock.classList.remove("hidden");
+        addressMissingBlock.classList.add("hidden");
+      } else {
+        addressReadyBlock.classList.add("hidden");
+        addressMissingBlock.classList.remove("hidden");
+      }
+
+      if (qrImg && qrEmpty) {
+        if (data.qr_code) {
+          qrImg.src = "data:image/png;base64," + data.qr_code;
+          qrImg.classList.remove("hidden");
+          qrEmpty.classList.add("hidden");
+        } else {
+          qrImg.src = "";
+          qrImg.classList.add("hidden");
+          qrEmpty.classList.remove("hidden");
+        }
+      }
+
+      autoCheckSupported = !!data.auto_check_supported;
+      if (checkBtn) {
+        checkBtn.disabled = !autoCheckSupported || !data.deposit_address;
+      }
+      if (checkResult && !keepCheckMessage) {
+        checkResult.textContent = autoCheckSupported
+          ? "Auto-check runs in background without blocking page load."
+          : "Auto-check is not currently enabled for this network.";
+      } else if (checkResult && keepCheckMessage && checkMessage) {
+        checkResult.textContent = checkMessage;
+      }
+
+      renderDeposits(data.deposits);
+
+      setStatus(
+        "Ready",
+        "inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
+      );
+    } catch (error) {
+      setStatus(
+        "Error",
+        "inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
+      );
+      if (checkResult) {
+        checkResult.textContent = error.message || "Failed to update selected network.";
+      }
+    }
+  }
+
+  async function runDepositCheck(autoMode) {
+    if (!autoCheckSupported || !checkBtn || checkBtn.disabled) {
+      return;
+    }
+
+    checkBtn.disabled = true;
+    const oldText = checkBtn.textContent;
+    checkBtn.textContent = "Checking...";
+    setStatus(
+      "Checking",
+      "inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
+    );
+    if (checkResult) checkResult.textContent = "Checking network confirmations...";
+
+    try {
+      const body = new URLSearchParams({ network: currentNetwork }).toString();
+      const response = await fetch(checkApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": getCookie("csrftoken"),
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "Deposit check failed.");
+      }
+
+      if (checkResult) checkResult.textContent = data.message || "No new deposits found.";
+
+      if (data.created > 0) {
+        setStatus(
+          "Updated",
+          "inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700"
+        );
+        await loadNetworkData(currentNetwork, { keepCheckMessage: true, checkMessage: data.message });
+        if (checkResult) checkResult.textContent = data.message || "Deposit received and credited.";
+      } else {
+        setStatus(
+          "No Updates",
+          "inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
+        );
+      }
+    } catch (error) {
+      if (checkResult) checkResult.textContent = error.message || "Failed to check deposits.";
+      setStatus(
+        "Error",
+        "inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700"
+      );
+    } finally {
+      checkBtn.disabled = !autoCheckSupported || !addressInput || !addressInput.value;
+      checkBtn.textContent = oldText;
+    }
+  }
+
+  if (copyBtn && addressInput) {
+    copyBtn.addEventListener("click", function () {
+      navigator.clipboard.writeText(addressInput.value).then(function () {
+        const oldText = copyBtn.textContent;
+        copyBtn.textContent = "Copied";
+        setTimeout(function () {
+          copyBtn.textContent = oldText;
+        }, 1200);
+      });
+    });
+  }
+
+  if (networkSelect) {
+    networkSelect.addEventListener("change", function () {
+      loadNetworkData(networkSelect.value, { keepCheckMessage: false });
+    });
+  }
+
+  if (checkBtn) {
+    checkBtn.addEventListener("click", function () {
+      runDepositCheck(false);
+    });
+  }
+
+  if (autoCheckSupported) {
+    setTimeout(function () {
+      runDepositCheck(true);
+    }, 400);
+  }
+});
+</script>
+
+{% endblock %}

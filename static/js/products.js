@@ -22,7 +22,9 @@ function loadProduct(button) {
     fetch(`${view_product_ajax}?platform_id=${platformId}`)
         .then(res => res.json())
         .then(response => {
-
+            if(response.msg) {
+              showToast(response.msg, duration = 4000)
+            }
             if (!response.data || !response.data.length) return;
 
             const item = response.data[0];
@@ -69,6 +71,8 @@ function loadProduct(button) {
               if (item.disable_ordering) {
                 disable_button(buy_product_btn)
               } else {enable_button(buy_product_btn)}
+
+
         })
         .catch(
             () => {
