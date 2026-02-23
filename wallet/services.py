@@ -694,7 +694,13 @@ def _check_tron_deposits(wallet: Wallet) -> dict[str, Any]:
         result["message"] = f"Failed to fetch TRON deposits: {exc}"
         return result
 
-    for tx in payload.get("data", []):
+    tx_rows = payload.get("data", [])
+    if not isinstance(tx_rows, list):
+        tx_rows = []
+
+    for tx in tx_rows:
+        if not isinstance(tx, dict):
+            continue
         result["processed"] += 1
         to_address = tx.get("to")
         token_address = ((tx.get("token_info") or {}).get("address") or "").lower()
@@ -960,6 +966,8 @@ def _check_bep20_deposits_via_bscscan(
             break
 
         for tx in raw_result:
+            if not isinstance(tx, dict):
+                continue
             result["processed"] += 1
             to_address = str(tx.get("to") or "").lower()
             if to_address != normalized_address:

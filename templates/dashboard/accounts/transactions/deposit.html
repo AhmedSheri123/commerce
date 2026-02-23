@@ -195,6 +195,24 @@ document.addEventListener("DOMContentLoaded", function () {
     return "";
   }
 
+  async function parseApiResponse(response) {
+    if (response.redirected && response.url) {
+      window.location.href = response.url;
+      throw new Error("Session expired. Redirecting to login.");
+    }
+
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.indexOf("application/json") !== -1) {
+      return await response.json();
+    }
+
+    const text = await response.text();
+    const preview = (text || "").replace(/\s+/g, " ").trim().slice(0, 140);
+    throw new Error(
+      "Server returned non-JSON response (" + response.status + "). " + (preview || "Check server logs.")
+    );
+  }
+
   function statusBadgeHtml(status) {
     if (status === "pending") {
       return '<span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Pending</span>';
@@ -245,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         body: body
       });
-      const data = await response.json();
+      const data = await parseApiResponse(response);
       if (!response.ok || !data.ok) {
         throw new Error(data.message || "Failed to load network data.");
       }
@@ -337,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function () {
         body
       });
 
-      const data = await response.json();
+      const data = await parseApiResponse(response);
       if (!response.ok || !data.ok) {
         throw new Error(data.message || "Deposit check failed.");
       }

@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 from decimal import Decimal
 from io import BytesIO
 
@@ -30,6 +31,8 @@ from wallet.services import (
     topup_wallet_gas,
     webhook_deposit,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _build_qr_base64(network: str, address: str) -> str:
@@ -99,48 +102,77 @@ def deposit_view(request):
 @login_required
 @require_POST
 def deposit_network_api(request):
-    network_meta = get_network_meta(request.POST.get("network", DEFAULT_DEPOSIT_NETWORK))
-    selected_network = network_meta["key"]
-    wallet, _ = ensure_user_network_wallet(request.user, selected_network)
-    deposit_address = wallet.address
+    try:
+        network_meta = get_network_meta(request.POST.get("network", DEFAULT_DEPOSIT_NETWORK))
+        selected_network = network_meta["key"]
+        wallet, _ = ensure_user_network_wallet(request.user, selected_network)
+        deposit_address = wallet.address
 
-    return JsonResponse(
-        {
-            "ok": True,
-            "network": selected_network,
-            "selected_network": network_meta,
-            "deposit_address": deposit_address,
-            "wallet_balance": str(wallet.profile.balance),
-            "qr_code": _build_qr_base64(selected_network, deposit_address),
-            "relayer_available": relayer_is_configured(selected_network),
-            "main_wallet_available": main_wallet_is_configured(selected_network),
-            "deposits": _serialize_deposits(wallet),
-            "auto_check_supported": bool(network_meta.get("auto_check_supported")),
-        }
-    )
+        return JsonResponse(
+            {
+                "ok": True,
+                "network": selected_network,
+                "selected_network": network_meta,
+                "deposit_address": deposit_address,
+                "wallet_balance": str(wallet.profile.balance),
+                "qr_code": _build_qr_base64(selected_network, deposit_address),
+                "relayer_available": relayer_is_configured(selected_network),
+                "main_wallet_available": main_wallet_is_configured(selected_network),
+                "deposits": _serialize_deposits(wallet),
+                "auto_check_supported": bool(network_meta.get("auto_check_supported")),
+            }
+        )
+    except Exception as exc:
+        logger.exception("deposit_network_api failed for user_id=%s", getattr(request.user, "id", None))
+        return JsonResponse(
+            {
+                "ok": False,
+                "network": normalize_network(request.POST.get("network", DEFAULT_DEPOSIT_NETWORK)),
+                "message": f"Failed to load network data: {exc}",
+            },
+            status=500,
+        )
 
 
 @login_required
 @require_POST
 def deposit_check_api(request):
     network = normalize_network(request.POST.get("network", DEFAULT_DEPOSIT_NETWORK))
-    wallet = get_user_wallet(request.user, network)
-    if wallet is None:
-        wallet, _ = ensure_user_network_wallet(request.user, network)
+    try:
+        wallet = get_user_wallet(request.user, network)
+        if wallet is None:
+            wallet, _ = ensure_user_network_wallet(request.user, network)
 
-    result = check_wallet_deposits(wallet)
-    status_code = 200 if result.get("ok") else 500
-    return JsonResponse(
-        {
-            "ok": result.get("ok", False),
-            "network": network,
-            "created": result.get("created", 0),
-            "created_amount": str(result.get("created_amount", "0")),
-            "processed": result.get("processed", 0),
-            "message": result.get("message", ""),
-        },
-        status=status_code,
-    )
+        result = check_wallet_deposits(wallet)
+        status_code = 200 if result.get("ok") else 500
+        return JsonResponse(
+            {
+                "ok": result.get("ok", False),
+                "network": network,
+                "created": result.get("created", 0),
+                "created_amount": str(result.get("created_amount", "0")),
+                "processed": result.get("processed", 0),
+                "message": result.get("message", ""),
+            },
+            status=status_code,
+        )
+    except Exception as exc:
+        logger.exception(
+            "deposit_check_api failed for user_id=%s network=%s",
+            getattr(request.user, "id", None),
+            network,
+        )
+        return JsonResponse(
+            {
+                "ok": False,
+                "network": network,
+                "created": 0,
+                "created_amount": "0",
+                "processed": 0,
+                "message": f"Internal server error while checking deposits: {exc}",
+            },
+            status=500,
+        )
 
 
 @login_required
