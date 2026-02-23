@@ -1,4 +1,5 @@
 from decimal import Decimal
+import ipaddress
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -23,6 +24,35 @@ from accounts.models import Transaction
 from django.db import models
 from management.models import SupportContact
 # Create your views here.
+
+
+def _get_client_ip(request):
+    candidates = []
+
+    cf_ip = str(request.META.get("HTTP_CF_CONNECTING_IP", "") or "").strip()
+    if cf_ip:
+        candidates.append(cf_ip)
+
+    forwarded_for = str(request.META.get("HTTP_X_FORWARDED_FOR", "") or "").strip()
+    if forwarded_for:
+        candidates.extend([item.strip() for item in forwarded_for.split(",") if item.strip()])
+
+    real_ip = str(request.META.get("HTTP_X_REAL_IP", "") or "").strip()
+    if real_ip:
+        candidates.append(real_ip)
+
+    remote_addr = str(request.META.get("REMOTE_ADDR", "") or "").strip()
+    if remote_addr:
+        candidates.append(remote_addr)
+
+    for candidate in candidates:
+        try:
+            ipaddress.ip_address(candidate)
+            return candidate
+        except ValueError:
+            continue
+    return None
+
 
 @login_required
 def index(request):
@@ -93,6 +123,11 @@ def Login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            login_ip = _get_client_ip(request)
+            if login_ip:
+                profile, _ = UserProfile.objects.get_or_create(user=user)
+                profile.last_login_ip = login_ip
+                profile.save(update_fields=["last_login_ip"])
             if not _survey_completed(user):
                 return redirect('accounts:survey')
             if next_page:
@@ -110,11 +145,19 @@ def signup(request):
         return redirect('home:index')
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        invite_code = request.POST.get('invite_code')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        username = (request.POST.get('username') or '').strip()
+        invite_code = (request.POST.get('invite_code') or '').strip()
+        password = request.POST.get('password') or ''
+        confirm_password = request.POST.get('confirm_password') or ''
         referrer_profiles = UserProfile.objects.filter(invite_code=invite_code)
+
+        if not username.isdigit() or not (8 <= len(username) <= 15):
+            messages.error(request, "Phone number must contain digits only and be 8 to 15 digits.")
+            return redirect('accounts:signup')
+
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters.")
+            return redirect('accounts:signup')
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
@@ -136,6 +179,7 @@ def signup(request):
 
         referrer_profile = referrer_profiles.first()
         user.profile.referred_by = referrer_profile.user
+        user.profile.signup_ip = _get_client_ip(request)
 
 
         if referrer_profile.user.profile.is_verified:

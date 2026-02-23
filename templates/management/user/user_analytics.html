@@ -8,7 +8,7 @@
                 <a href="{% url 'management:users' %}" class="text-blue-600 hover:underline text-sm">رجوع للمستخدمين</a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div class="text-sm text-gray-500">المستخدم</div>
                     <div class="text-base font-semibold text-gray-900 dark:text-white">{{ user_obj.username }}</div>
@@ -16,6 +16,16 @@
                 <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div class="text-sm text-gray-500">البريد</div>
                     <div class="text-base font-semibold text-gray-900 dark:text-white">{{ user_obj.email|default:"-" }}</div>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div class="text-sm text-gray-500">Signup IP</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white break-all">{{ user_profile.signup_ip|default:"-" }}</div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-300" data-ip-geo-target data-ip="{{ user_profile.signup_ip|default:'' }}">-</div>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div class="text-sm text-gray-500">Last Login IP</div>
+                    <div class="text-base font-semibold text-gray-900 dark:text-white break-all">{{ user_profile.last_login_ip|default:"-" }}</div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-300" data-ip-geo-target data-ip="{{ user_profile.last_login_ip|default:'' }}">-</div>
                 </div>
             </div>
 
@@ -281,6 +291,96 @@
 
     fetchCategories(initialPlatform, initialCategory).then(() => {
       fetchProducts(categorySelect.value || initialCategory, initialProduct);
+    });
+  })();
+
+  (function () {
+    const geoNodes = document.querySelectorAll('[data-ip-geo-target]');
+    if (!geoNodes.length) return;
+
+    const geoCache = new Map();
+
+    const isPrivateOrLocalIp = (ip) => {
+      if (!ip) return true;
+      const value = String(ip).trim().toLowerCase();
+      if (!value) return true;
+
+      if (value === '::1' || value === 'localhost') return true;
+      if (value.startsWith('fe80:') || value.startsWith('fc') || value.startsWith('fd')) return true;
+
+      const parts = value.split('.');
+      if (parts.length === 4 && parts.every((p) => /^\d+$/.test(p))) {
+        const a = Number(parts[0]);
+        const b = Number(parts[1]);
+        if (a === 10 || a === 127 || a === 0) return true;
+        if (a === 169 && b === 254) return true;
+        if (a === 172 && b >= 16 && b <= 31) return true;
+        if (a === 192 && b === 168) return true;
+      }
+      return false;
+    };
+
+    const formatGeo = (country, region, city) => {
+      const text = [country, region, city].filter(Boolean).join(' - ').trim();
+      return text || 'Unknown location';
+    };
+
+    const readGeoFromPayload = (payload) => {
+      if (!payload || typeof payload !== 'object') return '';
+
+      if (payload.success === true || payload.success === undefined) {
+        const country = payload.country || payload.country_name || payload.countryCode || payload.country_code || '';
+        const region = payload.region || payload.region_name || payload.regionName || '';
+        const city = payload.city || '';
+        const result = formatGeo(country, region, city);
+        if (result !== 'Unknown location') return result;
+      }
+      return '';
+    };
+
+    const fetchGeoForIp = async (ip) => {
+      if (geoCache.has(ip)) return geoCache.get(ip);
+
+      const endpoints = [
+        'https://ipwho.is/' + encodeURIComponent(ip),
+        'https://ipapi.co/' + encodeURIComponent(ip) + '/json/',
+      ];
+
+      for (const url of endpoints) {
+        try {
+          const response = await fetch(url, { method: 'GET' });
+          if (!response.ok) continue;
+          const data = await response.json();
+          const geo = readGeoFromPayload(data);
+          if (geo) {
+            geoCache.set(ip, geo);
+            return geo;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      const fallback = 'Location unavailable';
+      geoCache.set(ip, fallback);
+      return fallback;
+    };
+
+    geoNodes.forEach(async (node) => {
+      const ip = String(node.getAttribute('data-ip') || '').trim();
+      if (!ip) {
+        node.textContent = '-';
+        return;
+      }
+
+      if (isPrivateOrLocalIp(ip)) {
+        node.textContent = 'Private / Local IP';
+        return;
+      }
+
+      node.textContent = 'Detecting location...';
+      const geo = await fetchGeoForIp(ip);
+      node.textContent = geo;
     });
   })();
 </script>

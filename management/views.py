@@ -572,6 +572,7 @@ def toggleUserEnabled(request, user_id):
 
 def UserAnalytics(request, user_id):
     user = get_object_or_404(User, id=user_id)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
     progress = UserProgress.objects.select_related(
         'product_group',
         'product_group__category',
@@ -606,6 +607,7 @@ def UserAnalytics(request, user_id):
 
     return render(request, 'management/user/user_analytics.html', {
         'user_obj': user,
+        'user_profile': profile,
         'progress': progress,
         'progress_form': form,
         'deposits': deposits,
