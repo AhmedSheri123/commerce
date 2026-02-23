@@ -1,4 +1,4 @@
-
+let currentProductPlatformId = null;
 
 function showProductSkeleton() {
     const modal = document.getElementById("product-detail-modal");
@@ -13,22 +13,64 @@ function hideProductSkeleton() {
 }
 
 
-function loadProduct(button) {
-    const platformId = button.dataset.platformId;
+function renderEmptyProductDetails(message = "No products available for this platform.") {
+    const buyProductBtn = document.getElementById("buy-product-btn");
+    const productsListEl = document.getElementById("modal-products-list");
+
+    productsListEl.innerHTML = `<p class="text-center text-gray-500 py-2">${message}</p>`;
+    document.getElementById("modal-category").innerText = "No Active Product";
+    document.getElementById("modal-order-date").innerText = "-";
+    document.getElementById("modal-product-image").src = default_image;
+    document.getElementById("modal-count").innerText = "0 Products";
+    document.getElementById("modal-buy-price").innerText = "USDT 0.00";
+    document.getElementById("modal-sell-price").innerText = "USDT 0.00";
+    document.getElementById("modal-expected-profit").innerText = "USDT 0.00";
+    buyProductBtn.setAttribute("data-product-id", "");
+    buyProductBtn.setAttribute("data-group-id", "");
+    disable_button(buyProductBtn);
+}
+
+function getPlatformId(buttonOrPlatformId) {
+    if (typeof buttonOrPlatformId === "string" || typeof buttonOrPlatformId === "number") {
+        return String(buttonOrPlatformId);
+    }
+    if (buttonOrPlatformId && buttonOrPlatformId.dataset && buttonOrPlatformId.dataset.platformId) {
+        return buttonOrPlatformId.dataset.platformId;
+    }
+    return currentProductPlatformId;
+}
+
+function loadProduct(buttonOrPlatformId) {
+    const platformId = getPlatformId(buttonOrPlatformId);
     const modal = document.getElementById("product-detail-modal");
-    const buy_product_btn = document.getElementById("buy-product-btn")
+    const buy_product_btn = document.getElementById("buy-product-btn");
+
+    if (!platformId) {
+        renderEmptyProductDetails("Platform not selected.");
+        return;
+    }
+
+    currentProductPlatformId = platformId;
     showProductSkeleton();
 
     fetch(`${view_product_ajax}?platform_id=${platformId}`)
         .then(res => res.json())
         .then(response => {
             if(response.msg) {
-              showToast(response.msg, duration = 4000)
+              showToast(response.msg, 4000);
             }
-            if (!response.data || !response.data.length) return;
+            if (!response.data || !response.data.length) {
+                renderEmptyProductDetails("No products available for this platform.");
+                hideProductSkeleton();
+                return;
+            }
 
             const item = response.data[0];
-            const product = item.products[0];
+            if (!item.products || !item.products.length) {
+                renderEmptyProductDetails("No products available for this platform.");
+                hideProductSkeleton();
+                return;
+            }
             const productsListEl = document.getElementById("modal-products-list");
             productsListEl.innerHTML = "";
 
@@ -110,8 +152,14 @@ function buyProduct(order_button) {
     showProductSkeleton();
     const modal = document.getElementById("product-detail-modal");
     const button = modal.querySelector('button[data-product-id]');
-    const showProductBtn = document.getElementById("show-product-btn"); 
     const group_id = button.dataset.groupId || "";
+
+    if (!group_id) {
+        tocastGen("No active product found for this platform.", "error");
+        hideProductSkeleton();
+        enable_button(order_button);
+        return;
+    }
 
     fetch(`${buy_product_ajax}?group_id=${group_id}`)
         .then(res => {
@@ -127,17 +175,22 @@ function buyProduct(order_button) {
                 if (response.is_done) {
                     hideProductDetailModal();
                     showComplitionModal();
+                    hideProductSkeleton();
+                    return;
                 }
             }
 
-            loadProduct(showProductBtn)
-            hideProductSkeleton();
-            enable_button(order_button);
+            loadProduct(currentProductPlatformId);
         })
         .catch(error => {
-            loadProduct(showProductBtn)
+            if (currentProductPlatformId) {
+                loadProduct(currentProductPlatformId);
+            } else {
+                hideProductSkeleton();
+            }
             tocastGen("An error occurred while purchasing the product.", 'error');
-            hideProductSkeleton();
+        })
+        .finally(() => {
             enable_button(order_button);
         });
 }

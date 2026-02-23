@@ -10,10 +10,15 @@ from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductGrou
 
 
 def _get_progress_for_platform(user, platform_id):
+    try:
+        platform_id = int(platform_id)
+    except (TypeError, ValueError):
+        return None
+
     progress = getattr(user, "progress", None)
     if not progress or not progress.product_group:
         return None
-    if progress.product_group.category.platform_id != int(platform_id):
+    if progress.product_group.category.platform_id != platform_id:
         return None
     return progress
 
@@ -62,11 +67,15 @@ def view_product_ajax(request):
     user = request.user
     profile = user.profile
     platform_id = request.GET.get("platform_id")
-    platform = PlatformModel.objects.get(id=platform_id)
+    if not platform_id:
+        return JsonResponse({"data": [], "msg": None})
+
+    platform = PlatformModel.objects.filter(id=platform_id).first()
+    if not platform:
+        return JsonResponse({"data": [], "msg": None})
+
     platform_msg = platform.msg if platform.msg else None
     data = {"data": [], "msg": platform_msg}
-    if not platform_id:
-        return JsonResponse(data)
 
     group = _active_group(request.user, platform_id)
     if not group:
