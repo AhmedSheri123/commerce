@@ -137,6 +137,36 @@
 
         <div class="grid gap-4 md:grid-cols-2">
           <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">TRON_ENDPOINT_URI</label>
+            <input type="text" name="tron_endpoint_uri" value="{{ service_settings.tron_endpoint_uri }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">TRON_USDT_CONTRACT</label>
+            <input type="text" name="tron_usdt_contract" value="{{ service_settings.tron_usdt_contract }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">TRON_API_TIMEOUT_SECONDS</label>
+            <input type="number" min="1" name="tron_api_timeout_seconds" value="{{ service_settings.tron_api_timeout_seconds }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">TRON_USDT_DECIMALS</label>
+            <input type="number" min="1" name="tron_usdt_decimals" value="{{ service_settings.tron_usdt_decimals }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_USDT_CONTRACT</label>
+            <input type="text" name="bep20_usdt_contract" value="{{ service_settings.bep20_usdt_contract }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_USDT_DECIMALS</label>
+            <input type="number" min="1" name="bep20_usdt_decimals" value="{{ service_settings.bep20_usdt_decimals }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_RPC_URL</label>
             <input type="text" name="bep20_rpc_url" value="{{ service_settings.bep20_rpc_url }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Recommended: <code>https://rpc.ankr.com/bsc</code> (or your private Ankr endpoint).</p>
@@ -165,14 +195,41 @@
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_AUTOCHECK_CHUNK_SIZE</label>
             <input type="number" min="1" name="bep20_autocheck_chunk_size" value="{{ service_settings.bep20_autocheck_chunk_size }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Fixed block range per RPC request (no automatic chunk halving).</p>
           </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_EXPLORER_CHAIN_ID</label>
+            <input type="number" min="1" name="bep20_explorer_chain_id" value="{{ service_settings.bep20_explorer_chain_id }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_RPC_TIMEOUT_SECONDS</label>
+            <input type="number" min="1" name="bep20_rpc_timeout_seconds" value="{{ service_settings.bep20_rpc_timeout_seconds }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_RELAYER_RESERVE_BNB</label>
             <input type="number" step="0.00000001" min="0" name="bep20_relayer_reserve_bnb" value="{{ service_settings.bep20_relayer_reserve_bnb }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
           </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_TOPUP_RECEIPT_TIMEOUT_SECONDS</label>
+            <input type="number" min="1" name="bep20_topup_receipt_timeout_seconds" value="{{ service_settings.bep20_topup_receipt_timeout_seconds }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_SWEEP_RECEIPT_TIMEOUT_SECONDS</label>
+            <input type="number" min="1" name="bep20_sweep_receipt_timeout_seconds" value="{{ service_settings.bep20_sweep_receipt_timeout_seconds }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">EXPLORER_TIMEOUT_SECONDS</label>
+            <input type="number" min="1" name="explorer_timeout_seconds" value="{{ service_settings.explorer_timeout_seconds }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BEP20_DEPOSIT_SOURCE</label>
             <select name="bep20_deposit_source" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
@@ -185,10 +242,17 @@
 
         <div class="grid gap-4 md:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BSCSCAN_API_URL (V2)</label>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BSCSCAN_API_URL (Primary)</label>
             <input type="text" name="bscscan_api_url" value="{{ service_settings.bscscan_api_url }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">Use: <code>https://api.etherscan.io/v2/api</code></p>
           </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BSCSCAN_V2_API_URL (Fallback)</label>
+            <input type="text" name="bscscan_v2_api_url" value="{{ service_settings.bscscan_v2_api_url }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-1">
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">BSCSCAN_API_KEY (Etherscan key)</label>
             <input type="text" name="bscscan_api_key" value="{{ service_settings.bscscan_api_key }}" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">

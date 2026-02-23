@@ -744,21 +744,63 @@ def ViewWalletRelayerSettings(request):
             return redirect("management:wallet_settings")
 
         if config_type == "service_settings":
+            tron_endpoint_uri = (request.POST.get("tron_endpoint_uri") or "").strip()
+            tron_usdt_contract = (request.POST.get("tron_usdt_contract") or "").strip()
+            tron_usdt_decimals_raw = (request.POST.get("tron_usdt_decimals") or "").strip()
+            bep20_usdt_contract = (request.POST.get("bep20_usdt_contract") or "").strip()
             bep20_rpc_url = (request.POST.get("bep20_rpc_url") or "").strip()
             fallback_bep20_rpc_url = (request.POST.get("fallback_bep20_rpc_url") or "").strip()
             bep20_rpc_fallback_urls = (request.POST.get("bep20_rpc_fallback_urls") or "").strip()
             bscscan_api_url = (request.POST.get("bscscan_api_url") or "").strip()
+            bscscan_v2_api_url = (request.POST.get("bscscan_v2_api_url") or "").strip()
             bscscan_api_key = (request.POST.get("bscscan_api_key") or "").strip()
             deposit_source = (request.POST.get("bep20_deposit_source") or "").strip().lower()
 
+            tron_timeout_raw = (request.POST.get("tron_api_timeout_seconds") or "").strip()
+            bep20_decimals_raw = (request.POST.get("bep20_usdt_decimals") or "").strip()
+            chain_id_raw = (request.POST.get("bep20_explorer_chain_id") or "").strip()
+            bep20_rpc_timeout_raw = (request.POST.get("bep20_rpc_timeout_seconds") or "").strip()
             lookback_raw = (request.POST.get("bep20_autocheck_lookback_blocks") or "").strip()
             initial_raw = (request.POST.get("bep20_initial_lookback_blocks") or "").strip()
             chunk_raw = (request.POST.get("bep20_autocheck_chunk_size") or "").strip()
             reserve_raw = (request.POST.get("bep20_relayer_reserve_bnb") or "").strip()
+            topup_receipt_timeout_raw = (request.POST.get("bep20_topup_receipt_timeout_seconds") or "").strip()
+            sweep_receipt_timeout_raw = (request.POST.get("bep20_sweep_receipt_timeout_seconds") or "").strip()
+            explorer_timeout_raw = (request.POST.get("explorer_timeout_seconds") or "").strip()
             offset_raw = (request.POST.get("bep20_bscscan_offset") or "").strip()
             pages_raw = (request.POST.get("bep20_bscscan_max_pages") or "").strip()
 
             errors = []
+            try:
+                tron_usdt_decimals = int(tron_usdt_decimals_raw)
+            except Exception:
+                tron_usdt_decimals = None
+                errors.append("TRON USDT decimals must be an integer.")
+
+            try:
+                tron_api_timeout_seconds = int(tron_timeout_raw)
+            except Exception:
+                tron_api_timeout_seconds = None
+                errors.append("TRON API timeout must be an integer.")
+
+            try:
+                bep20_usdt_decimals = int(bep20_decimals_raw)
+            except Exception:
+                bep20_usdt_decimals = None
+                errors.append("BEP20 USDT decimals must be an integer.")
+
+            try:
+                bep20_explorer_chain_id = int(chain_id_raw)
+            except Exception:
+                bep20_explorer_chain_id = None
+                errors.append("BEP20 explorer chain ID must be an integer.")
+
+            try:
+                bep20_rpc_timeout_seconds = int(bep20_rpc_timeout_raw)
+            except Exception:
+                bep20_rpc_timeout_seconds = None
+                errors.append("BEP20 RPC timeout must be an integer.")
+
             try:
                 lookback_blocks = int(lookback_raw)
             except Exception:
@@ -784,6 +826,24 @@ def ViewWalletRelayerSettings(request):
                 errors.append("Relayer reserve (BNB) must be a valid number.")
 
             try:
+                bep20_topup_receipt_timeout_seconds = int(topup_receipt_timeout_raw)
+            except Exception:
+                bep20_topup_receipt_timeout_seconds = None
+                errors.append("BEP20 top-up receipt timeout must be an integer.")
+
+            try:
+                bep20_sweep_receipt_timeout_seconds = int(sweep_receipt_timeout_raw)
+            except Exception:
+                bep20_sweep_receipt_timeout_seconds = None
+                errors.append("BEP20 sweep receipt timeout must be an integer.")
+
+            try:
+                explorer_timeout_seconds = int(explorer_timeout_raw)
+            except Exception:
+                explorer_timeout_seconds = None
+                errors.append("Explorer timeout must be an integer.")
+
+            try:
                 bscscan_offset = int(offset_raw)
             except Exception:
                 bscscan_offset = None
@@ -795,6 +855,22 @@ def ViewWalletRelayerSettings(request):
                 bscscan_max_pages = None
                 errors.append("BscScan max pages must be an integer.")
 
+            if not tron_endpoint_uri:
+                errors.append("TRON endpoint URI cannot be empty.")
+            if not tron_usdt_contract:
+                errors.append("TRON USDT contract cannot be empty.")
+            if tron_usdt_decimals is not None and tron_usdt_decimals <= 0:
+                errors.append("TRON USDT decimals must be greater than 0.")
+            if not bep20_usdt_contract:
+                errors.append("BEP20 USDT contract cannot be empty.")
+            if tron_api_timeout_seconds is not None and tron_api_timeout_seconds <= 0:
+                errors.append("TRON API timeout must be greater than 0.")
+            if bep20_usdt_decimals is not None and bep20_usdt_decimals <= 0:
+                errors.append("BEP20 USDT decimals must be greater than 0.")
+            if bep20_explorer_chain_id is not None and bep20_explorer_chain_id <= 0:
+                errors.append("BEP20 explorer chain ID must be greater than 0.")
+            if bep20_rpc_timeout_seconds is not None and bep20_rpc_timeout_seconds <= 0:
+                errors.append("BEP20 RPC timeout must be greater than 0.")
             if lookback_blocks is not None and lookback_blocks <= 0:
                 errors.append("Auto-check lookback blocks must be greater than 0.")
             if initial_blocks is not None and initial_blocks <= 0:
@@ -803,6 +879,12 @@ def ViewWalletRelayerSettings(request):
                 errors.append("Auto-check chunk size must be greater than 0.")
             if reserve_bnb is not None and reserve_bnb < 0:
                 errors.append("Relayer reserve (BNB) cannot be negative.")
+            if bep20_topup_receipt_timeout_seconds is not None and bep20_topup_receipt_timeout_seconds <= 0:
+                errors.append("BEP20 top-up receipt timeout must be greater than 0.")
+            if bep20_sweep_receipt_timeout_seconds is not None and bep20_sweep_receipt_timeout_seconds <= 0:
+                errors.append("BEP20 sweep receipt timeout must be greater than 0.")
+            if explorer_timeout_seconds is not None and explorer_timeout_seconds <= 0:
+                errors.append("Explorer timeout must be greater than 0.")
             if bscscan_offset is not None and bscscan_offset <= 0:
                 errors.append("BscScan offset must be greater than 0.")
             if bscscan_max_pages is not None and bscscan_max_pages <= 0:
@@ -811,20 +893,34 @@ def ViewWalletRelayerSettings(request):
                 errors.append("Deposit source must be one of: auto, rpc, bscscan.")
             if not bscscan_api_url:
                 errors.append("BscScan API URL cannot be empty.")
+            if not bscscan_v2_api_url:
+                errors.append("BscScan V2 API URL cannot be empty.")
 
             if errors:
                 messages.error(request, " ".join(errors))
                 return redirect("management:wallet_settings")
 
+            service_settings.tron_endpoint_uri = tron_endpoint_uri
+            service_settings.tron_usdt_contract = tron_usdt_contract
+            service_settings.tron_usdt_decimals = tron_usdt_decimals
+            service_settings.tron_api_timeout_seconds = tron_api_timeout_seconds
+            service_settings.bep20_usdt_contract = bep20_usdt_contract
+            service_settings.bep20_usdt_decimals = bep20_usdt_decimals
+            service_settings.bep20_explorer_chain_id = bep20_explorer_chain_id
             service_settings.bep20_rpc_url = bep20_rpc_url
             service_settings.fallback_bep20_rpc_url = fallback_bep20_rpc_url
             service_settings.bep20_rpc_fallback_urls = bep20_rpc_fallback_urls
+            service_settings.bep20_rpc_timeout_seconds = bep20_rpc_timeout_seconds
             service_settings.bep20_autocheck_lookback_blocks = lookback_blocks
             service_settings.bep20_initial_lookback_blocks = initial_blocks
             service_settings.bep20_autocheck_chunk_size = chunk_size
             service_settings.bep20_relayer_reserve_bnb = reserve_bnb
+            service_settings.bep20_topup_receipt_timeout_seconds = bep20_topup_receipt_timeout_seconds
+            service_settings.bep20_sweep_receipt_timeout_seconds = bep20_sweep_receipt_timeout_seconds
             service_settings.bscscan_api_url = bscscan_api_url
+            service_settings.bscscan_v2_api_url = bscscan_v2_api_url
             service_settings.bscscan_api_key = bscscan_api_key
+            service_settings.explorer_timeout_seconds = explorer_timeout_seconds
             service_settings.bep20_deposit_source = deposit_source
             service_settings.bep20_bscscan_offset = bscscan_offset
             service_settings.bep20_bscscan_max_pages = bscscan_max_pages

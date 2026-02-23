@@ -45,6 +45,10 @@ def _env_str(name: str, default: str = "") -> str:
 
 DEFAULT_DEPOSIT_NETWORK = Wallet.Network.TRON
 TRON_USDT_CONTRACT = _env_str("TRON_USDT_CONTRACT", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
+try:
+    TRON_USDT_DECIMALS = int(_env_str("TRON_USDT_DECIMALS", "6"))
+except Exception:
+    TRON_USDT_DECIMALS = 6
 BEP20_USDT_CONTRACT = _env_str("BEP20_USDT_CONTRACT", "55d398326f99059fF775485246999027B3197955")
 try:
     BEP20_USDT_DECIMALS = int(_env_str("BEP20_USDT_DECIMALS", "18"))
@@ -52,6 +56,10 @@ except Exception:
     BEP20_USDT_DECIMALS = 18
 TRON_ENDPOINT_URI = _env_str("TRON_ENDPOINT_URI", "https://api.trongrid.io")
 TRONGRID_API_KEY = _env_str("TRONGRID_API_KEY", "")
+try:
+    TRON_API_TIMEOUT_SECONDS = int(_env_str("TRON_API_TIMEOUT_SECONDS", "20"))
+except Exception:
+    TRON_API_TIMEOUT_SECONDS = 20
 BEP20_RPC_URL = _env_str("BEP20_RPC_URL", "")
 FALLBACK_BEP20_RPC_URL = _env_str("FALLBACK_BEP20_RPC_URL", "https://rpc.ankr.com/bsc")
 BEP20_RPC_FALLBACK_URLS = [
@@ -79,12 +87,20 @@ try:
 except Exception:
     BEP20_AUTOCHECK_CHUNK_SIZE = 200
 try:
+    BEP20_RPC_TIMEOUT_SECONDS = int(_env_str("BEP20_RPC_TIMEOUT_SECONDS", "15"))
+except Exception:
+    BEP20_RPC_TIMEOUT_SECONDS = 15
+try:
     BEP20_RELAYER_RESERVE_BNB_DEFAULT = Decimal(_env_str("BEP20_RELAYER_RESERVE_BNB", "0.01"))
 except Exception:
     BEP20_RELAYER_RESERVE_BNB_DEFAULT = Decimal("0.01")
 BSCSCAN_API_URL = _env_str("BSCSCAN_API_URL", "https://api.etherscan.io/v2/api")
 BSCSCAN_API_KEY = _env_str("BSCSCAN_API_KEY", "")
 BSCSCAN_V2_API_URL = _env_str("BSCSCAN_V2_API_URL", "https://api.etherscan.io/v2/api")
+try:
+    EXPLORER_TIMEOUT_SECONDS = int(_env_str("EXPLORER_TIMEOUT_SECONDS", "20"))
+except Exception:
+    EXPLORER_TIMEOUT_SECONDS = 20
 try:
     BEP20_EXPLORER_CHAIN_ID = int(_env_str("BEP20_EXPLORER_CHAIN_ID", "56"))
 except Exception:
@@ -103,6 +119,14 @@ try:
     BEP20_BSCSCAN_MAX_PAGES = int(_env_str("BEP20_BSCSCAN_MAX_PAGES", "5"))
 except Exception:
     BEP20_BSCSCAN_MAX_PAGES = 5
+try:
+    BEP20_TOPUP_RECEIPT_TIMEOUT_SECONDS = int(_env_str("BEP20_TOPUP_RECEIPT_TIMEOUT_SECONDS", "180"))
+except Exception:
+    BEP20_TOPUP_RECEIPT_TIMEOUT_SECONDS = 180
+try:
+    BEP20_SWEEP_RECEIPT_TIMEOUT_SECONDS = int(_env_str("BEP20_SWEEP_RECEIPT_TIMEOUT_SECONDS", "300"))
+except Exception:
+    BEP20_SWEEP_RECEIPT_TIMEOUT_SECONDS = 300
 
 
 def _split_rpc_urls(value: str) -> list[str]:
@@ -119,18 +143,30 @@ def _get_wallet_service_settings() -> WalletServiceSetting | None:
 
 def _get_bep20_runtime_settings() -> dict[str, Any]:
     defaults = {
+        "tron_endpoint_uri": TRON_ENDPOINT_URI,
+        "tron_usdt_contract": TRON_USDT_CONTRACT,
+        "tron_usdt_decimals": TRON_USDT_DECIMALS,
+        "tron_api_timeout_seconds": TRON_API_TIMEOUT_SECONDS,
+        "bep20_usdt_contract": BEP20_USDT_CONTRACT,
+        "bep20_usdt_decimals": BEP20_USDT_DECIMALS,
+        "bep20_explorer_chain_id": BEP20_EXPLORER_CHAIN_ID,
         "bep20_rpc_url": BEP20_RPC_URL,
         "fallback_bep20_rpc_url": FALLBACK_BEP20_RPC_URL,
         "bep20_rpc_fallback_urls": list(BEP20_RPC_FALLBACK_URLS),
+        "bep20_rpc_timeout_seconds": BEP20_RPC_TIMEOUT_SECONDS,
         "autocheck_lookback_blocks": BEP20_AUTOCHECK_LOOKBACK_BLOCKS,
         "initial_lookback_blocks": BEP20_INITIAL_LOOKBACK_BLOCKS,
         "autocheck_chunk_size": BEP20_AUTOCHECK_CHUNK_SIZE,
         "relayer_reserve_bnb": BEP20_RELAYER_RESERVE_BNB_DEFAULT,
         "bscscan_api_url": BSCSCAN_API_URL,
+        "bscscan_v2_api_url": BSCSCAN_V2_API_URL,
         "bscscan_api_key": BSCSCAN_API_KEY,
+        "explorer_timeout_seconds": EXPLORER_TIMEOUT_SECONDS,
         "deposit_source": BEP20_DEPOSIT_SOURCE,
         "bscscan_offset": BEP20_BSCSCAN_OFFSET,
         "bscscan_max_pages": BEP20_BSCSCAN_MAX_PAGES,
+        "bep20_topup_receipt_timeout_seconds": BEP20_TOPUP_RECEIPT_TIMEOUT_SECONDS,
+        "bep20_sweep_receipt_timeout_seconds": BEP20_SWEEP_RECEIPT_TIMEOUT_SECONDS,
     }
 
     settings = _get_wallet_service_settings()
@@ -149,9 +185,6 @@ def _get_bep20_runtime_settings() -> dict[str, Any]:
     deposit_source = str(settings.bep20_deposit_source or "").strip().lower()
     if deposit_source not in {"auto", "rpc", "bscscan"}:
         deposit_source = defaults["deposit_source"]
-    if deposit_source == "auto":
-        # Keep behavior predictable: Auto prefers RPC/Ankr path.
-        deposit_source = "rpc"
 
     fallback_urls = _split_rpc_urls(settings.bep20_rpc_fallback_urls or "")
     if not fallback_urls:
@@ -162,11 +195,43 @@ def _get_bep20_runtime_settings() -> dict[str, Any]:
         reserve_bnb = defaults["relayer_reserve_bnb"]
 
     bscscan_api_url = (settings.bscscan_api_url or "").strip() or defaults["bscscan_api_url"]
+    bscscan_v2_api_url = (settings.bscscan_v2_api_url or "").strip() or defaults["bscscan_v2_api_url"]
+    tron_endpoint_uri = (settings.tron_endpoint_uri or "").strip() or defaults["tron_endpoint_uri"]
+    tron_usdt_contract = (settings.tron_usdt_contract or "").strip() or defaults["tron_usdt_contract"]
+    bep20_usdt_contract = (settings.bep20_usdt_contract or "").strip() or defaults["bep20_usdt_contract"]
 
     return {
+        "tron_endpoint_uri": tron_endpoint_uri,
+        "tron_usdt_contract": tron_usdt_contract,
+        "tron_usdt_decimals": _safe_int(
+            settings.tron_usdt_decimals,
+            int(defaults["tron_usdt_decimals"]),
+            1,
+        ),
+        "tron_api_timeout_seconds": _safe_int(
+            settings.tron_api_timeout_seconds,
+            int(defaults["tron_api_timeout_seconds"]),
+            1,
+        ),
+        "bep20_usdt_contract": bep20_usdt_contract,
+        "bep20_usdt_decimals": _safe_int(
+            settings.bep20_usdt_decimals,
+            int(defaults["bep20_usdt_decimals"]),
+            1,
+        ),
+        "bep20_explorer_chain_id": _safe_int(
+            settings.bep20_explorer_chain_id,
+            int(defaults["bep20_explorer_chain_id"]),
+            1,
+        ),
         "bep20_rpc_url": (settings.bep20_rpc_url or "").strip(),
         "fallback_bep20_rpc_url": (settings.fallback_bep20_rpc_url or "").strip() or defaults["fallback_bep20_rpc_url"],
         "bep20_rpc_fallback_urls": fallback_urls,
+        "bep20_rpc_timeout_seconds": _safe_int(
+            settings.bep20_rpc_timeout_seconds,
+            int(defaults["bep20_rpc_timeout_seconds"]),
+            1,
+        ),
         "autocheck_lookback_blocks": _safe_int(
             settings.bep20_autocheck_lookback_blocks,
             int(defaults["autocheck_lookback_blocks"]),
@@ -184,10 +249,26 @@ def _get_bep20_runtime_settings() -> dict[str, Any]:
         ),
         "relayer_reserve_bnb": reserve_bnb,
         "bscscan_api_url": bscscan_api_url,
+        "bscscan_v2_api_url": bscscan_v2_api_url,
         "bscscan_api_key": (settings.bscscan_api_key or "").strip() or defaults["bscscan_api_key"],
+        "explorer_timeout_seconds": _safe_int(
+            settings.explorer_timeout_seconds,
+            int(defaults["explorer_timeout_seconds"]),
+            1,
+        ),
         "deposit_source": deposit_source,
         "bscscan_offset": _safe_int(settings.bep20_bscscan_offset, int(defaults["bscscan_offset"]), 1),
         "bscscan_max_pages": _safe_int(settings.bep20_bscscan_max_pages, int(defaults["bscscan_max_pages"]), 1),
+        "bep20_topup_receipt_timeout_seconds": _safe_int(
+            settings.bep20_topup_receipt_timeout_seconds,
+            int(defaults["bep20_topup_receipt_timeout_seconds"]),
+            1,
+        ),
+        "bep20_sweep_receipt_timeout_seconds": _safe_int(
+            settings.bep20_sweep_receipt_timeout_seconds,
+            int(defaults["bep20_sweep_receipt_timeout_seconds"]),
+            1,
+        ),
     }
 
 
@@ -200,21 +281,43 @@ def _is_deprecated_v1_payload(payload: Any) -> bool:
     return "deprecated v1 endpoint" in combined and "v2" in combined
 
 
-def _explorer_get_with_v2_fallback(api_url: str, params: dict[str, Any]) -> tuple[dict[str, Any], str]:
-    response = requests.get(api_url, params=params, timeout=20)
-    response.raise_for_status()
-    payload = response.json()
+def _explorer_get_with_v2_fallback(
+    api_url: str,
+    params: dict[str, Any],
+    v2_api_url: str,
+    timeout_seconds: int,
+) -> tuple[dict[str, Any], str]:
+    def _request_json(url: str) -> dict[str, Any]:
+        response = requests.get(url, params=params, timeout=timeout)
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Explorer response is not a JSON object.")
+        return payload
+
+    timeout = max(int(timeout_seconds or 1), 1)
+    primary_url = (api_url or "").strip() or BSCSCAN_API_URL
+    v2_url = (v2_api_url or "").strip() or BSCSCAN_V2_API_URL
+    if primary_url.rstrip("/") == v2_url.rstrip("/"):
+        return _request_json(primary_url), primary_url
+
+    try:
+        payload = _request_json(primary_url)
+    except Exception as primary_exc:
+        try:
+            return _request_json(v2_url), v2_url
+        except Exception as fallback_exc:
+            raise Exception(
+                f"Primary explorer request failed: {primary_exc}. V2 fallback failed: {fallback_exc}"
+            ) from fallback_exc
+
     if not _is_deprecated_v1_payload(payload):
-        return payload, api_url
+        return payload, primary_url
 
-    v2_url = BSCSCAN_V2_API_URL
-    if (api_url or "").strip().rstrip("/") == (v2_url or "").strip().rstrip("/"):
-        return payload, api_url
-
-    response = requests.get(v2_url, params=params, timeout=20)
-    response.raise_for_status()
-    payload = response.json()
-    return payload, v2_url
+    try:
+        return _request_json(v2_url), v2_url
+    except Exception as fallback_exc:
+        raise Exception(f"Explorer V2 fallback failed: {fallback_exc}") from fallback_exc
 
 
 NETWORK_META: dict[str, dict[str, Any]] = {
@@ -237,6 +340,8 @@ NETWORK_META: dict[str, dict[str, Any]] = {
 _tron_client = None
 _tron_usdt_contract = None
 _tron_client_api_key = ""
+_tron_client_endpoint_uri = ""
+_tron_usdt_contract_address = ""
 _bep20_client = None
 _bep20_client_rpc_url = ""
 
@@ -304,30 +409,40 @@ def _get_bep20_bscscan_api_key() -> str:
 
 
 def _get_tron_client():
-    global _tron_client, _tron_usdt_contract, _tron_client_api_key
+    global _tron_client, _tron_usdt_contract, _tron_client_api_key, _tron_client_endpoint_uri
     if Tron is None or HTTPProvider is None:
         return None
 
+    runtime_settings = _get_bep20_runtime_settings()
+    endpoint_uri = str(runtime_settings.get("tron_endpoint_uri") or "").strip() or TRON_ENDPOINT_URI
     api_key = _get_tron_relayer_api_key() or TRONGRID_API_KEY
-    if _tron_client is not None and _tron_client_api_key == api_key:
+    if (
+        _tron_client is not None
+        and _tron_client_api_key == api_key
+        and _tron_client_endpoint_uri == endpoint_uri
+    ):
         return _tron_client
 
-    provider_kwargs: dict[str, Any] = {"endpoint_uri": TRON_ENDPOINT_URI}
+    provider_kwargs: dict[str, Any] = {"endpoint_uri": endpoint_uri}
     if api_key:
         provider_kwargs["api_key"] = api_key
     _tron_client = Tron(provider=HTTPProvider(**provider_kwargs))
     _tron_client_api_key = api_key
+    _tron_client_endpoint_uri = endpoint_uri
     _tron_usdt_contract = None
     return _tron_client
 
 
 def _get_tron_usdt_contract():
-    global _tron_usdt_contract
+    global _tron_usdt_contract, _tron_usdt_contract_address
     client = _get_tron_client()
     if client is None:
         return None
-    if _tron_usdt_contract is None:
-        _tron_usdt_contract = client.get_contract(TRON_USDT_CONTRACT)
+    runtime_settings = _get_bep20_runtime_settings()
+    contract_address = str(runtime_settings.get("tron_usdt_contract") or "").strip() or TRON_USDT_CONTRACT
+    if _tron_usdt_contract is None or _tron_usdt_contract_address != contract_address:
+        _tron_usdt_contract = client.get_contract(contract_address)
+        _tron_usdt_contract_address = contract_address
     return _tron_usdt_contract
 
 
@@ -359,6 +474,8 @@ def _get_bep20_client(force_refresh: bool = False, exclude_rpc_urls: list[str] |
     if Web3 is None:
         return None
 
+    runtime_settings = _get_bep20_runtime_settings()
+    rpc_timeout = max(int(runtime_settings.get("bep20_rpc_timeout_seconds") or 1), 1)
     candidates = _get_bep20_rpc_candidates()
     if exclude_rpc_urls:
         blocked = {(item or "").strip() for item in exclude_rpc_urls if (item or "").strip()}
@@ -375,7 +492,7 @@ def _get_bep20_client(force_refresh: bool = False, exclude_rpc_urls: list[str] |
     _bep20_client_rpc_url = ""
     for rpc_url in candidates:
         try:
-            candidate = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 15}))
+            candidate = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": rpc_timeout}))
             _ = int(candidate.eth.block_number)
             _bep20_client = candidate
             _bep20_client_rpc_url = rpc_url
@@ -684,9 +801,15 @@ def check_wallet_deposits(wallet: Wallet) -> dict[str, Any]:
 
 def _check_tron_deposits(wallet: Wallet) -> dict[str, Any]:
     result = {"ok": True, "created": 0, "processed": 0, "created_amount": Decimal("0"), "message": ""}
+    runtime_settings = _get_bep20_runtime_settings()
+    endpoint_uri = str(runtime_settings.get("tron_endpoint_uri") or "").strip() or TRON_ENDPOINT_URI
+    token_contract = str(runtime_settings.get("tron_usdt_contract") or "").strip() or TRON_USDT_CONTRACT
+    token_decimals = max(int(runtime_settings.get("tron_usdt_decimals") or 1), 1)
+    decimals_factor = Decimal(10) ** Decimal(token_decimals)
+    timeout_seconds = max(int(runtime_settings.get("tron_api_timeout_seconds") or 1), 1)
     try:
-        url = f"{TRON_ENDPOINT_URI}/v1/accounts/{wallet.address}/transactions/trc20"
-        response = requests.get(url, timeout=20)
+        url = f"{endpoint_uri}/v1/accounts/{wallet.address}/transactions/trc20"
+        response = requests.get(url, timeout=timeout_seconds)
         response.raise_for_status()
         payload = response.json()
     except Exception as exc:
@@ -707,10 +830,10 @@ def _check_tron_deposits(wallet: Wallet) -> dict[str, Any]:
         txid = tx.get("transaction_id")
         if to_address != wallet.address or not txid:
             continue
-        if token_address != TRON_USDT_CONTRACT.lower():
+        if token_address != token_contract.lower():
             continue
 
-        amount = _safe_decimal(tx.get("value", "0")) / Decimal("1000000")
+        amount = _safe_decimal(tx.get("value", "0")) / decimals_factor
         if amount <= 0:
             continue
 
@@ -833,8 +956,11 @@ def _get_last_confirmed_bep20_block(wallet: Wallet) -> int:
 def _get_bep20_latest_block_via_bscscan() -> int:
     runtime_settings = _get_bep20_runtime_settings()
     bscscan_api_url = str(runtime_settings.get("bscscan_api_url") or "").strip() or BSCSCAN_API_URL
+    bscscan_v2_api_url = str(runtime_settings.get("bscscan_v2_api_url") or "").strip() or BSCSCAN_V2_API_URL
+    timeout_seconds = max(int(runtime_settings.get("explorer_timeout_seconds") or 1), 1)
+    chain_id = max(int(runtime_settings.get("bep20_explorer_chain_id") or 1), 1)
     params: dict[str, Any] = {
-        "chainid": str(BEP20_EXPLORER_CHAIN_ID),
+        "chainid": str(chain_id),
         "module": "proxy",
         "action": "eth_blockNumber",
     }
@@ -843,7 +969,12 @@ def _get_bep20_latest_block_via_bscscan() -> int:
         params["apikey"] = bscscan_api_key
 
     try:
-        payload, _ = _explorer_get_with_v2_fallback(bscscan_api_url, params)
+        payload, _ = _explorer_get_with_v2_fallback(
+            bscscan_api_url,
+            params,
+            bscscan_v2_api_url,
+            timeout_seconds,
+        )
     except Exception:
         return 0
 
@@ -895,13 +1026,17 @@ def _check_bep20_deposits_via_bscscan(
         result["message"] = "Wallet address is missing."
         return result
 
-    if not BEP20_USDT_CONTRACT:
+    runtime_settings = _get_bep20_runtime_settings()
+    bep20_usdt_contract = str(runtime_settings.get("bep20_usdt_contract") or "").strip() or BEP20_USDT_CONTRACT
+    if not bep20_usdt_contract:
         result["ok"] = False
         result["message"] = "BEP20 USDT contract is not configured."
         return result
-
-    runtime_settings = _get_bep20_runtime_settings()
     bscscan_api_url = str(runtime_settings.get("bscscan_api_url") or "").strip() or BSCSCAN_API_URL
+    bscscan_v2_api_url = str(runtime_settings.get("bscscan_v2_api_url") or "").strip() or BSCSCAN_V2_API_URL
+    timeout_seconds = max(int(runtime_settings.get("explorer_timeout_seconds") or 1), 1)
+    chain_id = max(int(runtime_settings.get("bep20_explorer_chain_id") or 1), 1)
+    default_token_decimals = max(int(runtime_settings.get("bep20_usdt_decimals") or 1), 1)
     offset = max(int(runtime_settings.get("bscscan_offset") or 1), 50)
     max_pages = max(int(runtime_settings.get("bscscan_max_pages") or 1), 1)
     normalized_address = address.lower()
@@ -909,11 +1044,11 @@ def _check_bep20_deposits_via_bscscan(
     page = 1
     while page <= max_pages:
         params: dict[str, Any] = {
-            "chainid": str(BEP20_EXPLORER_CHAIN_ID),
+            "chainid": str(chain_id),
             "module": "account",
             "action": "tokentx",
             "address": address,
-            "contractaddress": BEP20_USDT_CONTRACT,
+            "contractaddress": bep20_usdt_contract,
             "startblock": max(int(start_block or 0), 0),
             "endblock": int(end_block) if end_block is not None else 99_999_999,
             "page": page,
@@ -924,7 +1059,12 @@ def _check_bep20_deposits_via_bscscan(
             params["apikey"] = bscscan_api_key
 
         try:
-            payload, used_api_url = _explorer_get_with_v2_fallback(bscscan_api_url, params)
+            payload, used_api_url = _explorer_get_with_v2_fallback(
+                bscscan_api_url,
+                params,
+                bscscan_v2_api_url,
+                timeout_seconds,
+            )
             bscscan_api_url = used_api_url
         except Exception as exc:
             result["ok"] = False
@@ -984,11 +1124,11 @@ def _check_bep20_deposits_via_bscscan(
             if confirmations <= 0:
                 continue
 
-            token_decimals = BEP20_USDT_DECIMALS
+            token_decimals = default_token_decimals
             try:
-                token_decimals = int(str(tx.get("tokenDecimal", BEP20_USDT_DECIMALS)).strip())
+                token_decimals = int(str(tx.get("tokenDecimal", default_token_decimals)).strip())
             except Exception:
-                token_decimals = BEP20_USDT_DECIMALS
+                token_decimals = default_token_decimals
 
             decimals_factor = Decimal(10) ** Decimal(max(token_decimals, 0))
             amount = _safe_decimal(tx.get("value", "0")) / decimals_factor
@@ -1051,6 +1191,8 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
     last_processed_block = _get_last_confirmed_bep20_block(wallet)
     last_scanned_block = max(int(getattr(wallet, "last_scanned_block", 0) or 0), 0)
     runtime_settings = _get_bep20_runtime_settings()
+    bep20_usdt_contract = str(runtime_settings.get("bep20_usdt_contract") or "").strip() or BEP20_USDT_CONTRACT
+    bep20_usdt_decimals = max(int(runtime_settings.get("bep20_usdt_decimals") or 1), 1)
     scan_source = str(runtime_settings.get("deposit_source") or "auto").strip().lower()
 
     if scan_source == "bscscan":
@@ -1065,7 +1207,7 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
     if client is None:
         if scan_source == "rpc":
             result["ok"] = False
-            result["message"] = "BEP20 RPC is unavailable. Configure BEP20_RPC_URL in environment."
+            result["message"] = "BEP20 RPC is unavailable. Configure BEP20 RPC settings in admin panel."
             return result
 
         fallback_start, fallback_latest = _resolve_bep20_bscscan_start_block(
@@ -1075,7 +1217,7 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
         fallback_end = fallback_latest if fallback_latest > 0 else None
         return _run_bep20_deposits_via_bscscan(wallet, start_block=fallback_start, end_block=fallback_end)
 
-    token_address = _to_checksum_address(client, BEP20_USDT_CONTRACT)
+    token_address = _to_checksum_address(client, bep20_usdt_contract)
     wallet_address = _to_checksum_address(client, wallet.address)
     if not token_address or not wallet_address:
         result["ok"] = False
@@ -1114,77 +1256,102 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
         return result
 
     chunk_size = max(int(runtime_settings.get("autocheck_chunk_size") or 1), 1)
-    min_chunk_size = 1 if scan_source == "rpc" else 50
     transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
     to_topic = _topic_address(wallet_address)
 
     current_from = start_block
     while current_from <= latest_block:
-        current_chunk = chunk_size
-        logs = None
-        current_to = min(current_from + current_chunk - 1, latest_block)
-        while logs is None:
-            current_to = min(current_from + current_chunk - 1, latest_block)
-            try:
-                logs = client.eth.get_logs(
-                    {
-                        "fromBlock": current_from,
-                        "toBlock": current_to,
-                        "address": token_address,
-                        "topics": [transfer_topic, None, to_topic],
-                    }
+        current_to = min(current_from + chunk_size - 1, latest_block)
+        try:
+            logs = client.eth.get_logs(
+                {
+                    "fromBlock": current_from,
+                    "toBlock": current_to,
+                    "address": token_address,
+                    "topics": [transfer_topic, None, to_topic],
+                }
+            )
+        except Exception as exc:
+            error_text = str(exc).lower()
+            is_limit_error = (
+                "limit exceeded" in error_text
+                or "-32005" in error_text
+                or "range is too wide" in error_text
+                or "query returned more than" in error_text
+            )
+            if is_limit_error and scan_source != "rpc":
+                fallback = _run_bep20_deposits_via_bscscan(
+                    wallet,
+                    start_block=current_from,
+                    end_block=latest_block,
                 )
-            except Exception as exc:
-                error_text = str(exc).lower()
-                if ("limit exceeded" in error_text or "-32005" in error_text) and current_chunk > min_chunk_size:
-                    current_chunk = max(min_chunk_size, current_chunk // 2)
-                    continue
-                if ("limit exceeded" in error_text or "-32005" in error_text) and scan_source != "rpc":
-                    fallback = _run_bep20_deposits_via_bscscan(
-                        wallet,
-                        start_block=current_from,
-                        end_block=latest_block,
+                if fallback.get("ok"):
+                    result["created"] += int(fallback.get("created", 0) or 0)
+                    result["processed"] += int(fallback.get("processed", 0) or 0)
+                    result["created_amount"] = (
+                        _safe_decimal(result.get("created_amount", "0"))
+                        + _safe_decimal(fallback.get("created_amount", "0"))
                     )
-                    if fallback.get("ok"):
-                        result["created"] += int(fallback.get("created", 0) or 0)
-                        result["processed"] += int(fallback.get("processed", 0) or 0)
-                        result["created_amount"] = (
-                            _safe_decimal(result.get("created_amount", "0"))
-                            + _safe_decimal(fallback.get("created_amount", "0"))
-                        )
-                        _set_deposit_result_message(result)
-                        return result
-                    result["ok"] = False
-                    result["message"] = (
-                        f"Failed to scan BEP20 logs and BscScan fallback: {fallback.get('message', 'unknown error')}"
-                    )
+                    _set_deposit_result_message(result)
                     return result
-                if "limit exceeded" in error_text or "-32005" in error_text:
-                    if scan_source == "rpc":
-                        previous_rpc_url = str(_bep20_client_rpc_url or "").strip()
-                        switched_client = _get_bep20_client(
-                            force_refresh=True,
-                            exclude_rpc_urls=[previous_rpc_url] if previous_rpc_url else None,
-                        )
-                        switched_rpc_url = str(_bep20_client_rpc_url or "").strip()
-                        if switched_client is not None and switched_rpc_url and switched_rpc_url != previous_rpc_url:
-                            client = switched_client
-                            token_address = _to_checksum_address(client, BEP20_USDT_CONTRACT)
-                            wallet_address = _to_checksum_address(client, wallet.address)
-                            if not token_address or not wallet_address:
-                                result["ok"] = False
-                                result["message"] = "BEP20 contract or wallet address is invalid."
-                                return result
-                            transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
-                            to_topic = _topic_address(wallet_address)
-                            continue
+                result["ok"] = False
+                result["message"] = (
+                    f"Failed to scan BEP20 logs and BscScan fallback: {fallback.get('message', 'unknown error')}"
+                )
+                return result
 
+            if is_limit_error and scan_source == "rpc":
+                previous_rpc_url = str(_bep20_client_rpc_url or "").strip()
+                switched_client = _get_bep20_client(
+                    force_refresh=True,
+                    exclude_rpc_urls=[previous_rpc_url] if previous_rpc_url else None,
+                )
+                switched_rpc_url = str(_bep20_client_rpc_url or "").strip()
+                if switched_client is not None and switched_rpc_url and switched_rpc_url != previous_rpc_url:
+                    client = switched_client
+                    token_address = _to_checksum_address(client, bep20_usdt_contract)
+                    wallet_address = _to_checksum_address(client, wallet.address)
+                    if not token_address or not wallet_address:
+                        result["ok"] = False
+                        result["message"] = "BEP20 contract or wallet address is invalid."
+                        return result
+                    transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
+                    to_topic = _topic_address(wallet_address)
+                    try:
+                        logs = client.eth.get_logs(
+                            {
+                                "fromBlock": current_from,
+                                "toBlock": current_to,
+                                "address": token_address,
+                                "topics": [transfer_topic, None, to_topic],
+                            }
+                        )
+                    except Exception as switched_exc:
+                        switched_error_text = str(switched_exc).lower()
+                        switched_limit_error = (
+                            "limit exceeded" in switched_error_text
+                            or "-32005" in switched_error_text
+                            or "range is too wide" in switched_error_text
+                            or "query returned more than" in switched_error_text
+                        )
+                        if switched_limit_error:
+                            result["ok"] = False
+                            result["message"] = (
+                                f"BEP20 RPC returned range/limit error at fixed chunk={chunk_size}. "
+                                "Lower BEP20_AUTOCHECK_CHUNK_SIZE in settings or use a stronger RPC endpoint."
+                            )
+                            return result
+                        result["ok"] = False
+                        result["message"] = f"Failed to scan BEP20 logs after RPC switch: {switched_exc}"
+                        return result
+                else:
                     result["ok"] = False
                     result["message"] = (
-                        f"BEP20 RPC returned range/limit error at chunk={current_chunk}. "
-                        "Reduce chunk size or use another RPC endpoint."
+                        f"BEP20 RPC returned range/limit error at fixed chunk={chunk_size}. "
+                        "Lower BEP20_AUTOCHECK_CHUNK_SIZE in settings or use a stronger RPC endpoint."
                     )
                     return result
+            else:
                 result["ok"] = False
                 result["message"] = f"Failed to scan BEP20 logs: {exc}"
                 return result
@@ -1200,7 +1367,7 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
             if raw_amount <= 0:
                 continue
 
-            decimals_factor = Decimal(10) ** Decimal(max(BEP20_USDT_DECIMALS, 0))
+            decimals_factor = Decimal(10) ** Decimal(max(bep20_usdt_decimals, 0))
             amount = _safe_decimal(raw_amount) / decimals_factor
             if amount <= 0:
                 continue
@@ -1222,6 +1389,7 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
                 _record_created_deposit(result, amount)
 
         current_from = current_to + 1
+        _update_wallet_last_scanned_block(wallet, current_to)
 
     _set_deposit_result_message(result)
     _update_wallet_last_scanned_block(wallet, latest_block)
@@ -1343,7 +1511,7 @@ def _topup_bep20_gas(wallet: Wallet) -> dict[str, Any]:
     if client is None:
         return {
             "ok": False,
-            "message": "BEP20 RPC is unavailable. Configure BEP20_RPC_URL in environment.",
+            "message": "BEP20 RPC is unavailable. Configure BEP20 RPC settings in admin panel.",
         }
     if Account is None:
         return {"ok": False, "message": "eth-account is unavailable."}
@@ -1384,11 +1552,12 @@ def _topup_bep20_gas(wallet: Wallet) -> dict[str, Any]:
         requested_value_wei = min(requested_value_wei, needed_value_wei)
 
     try:
+        runtime_settings = _get_bep20_runtime_settings()
+        topup_receipt_timeout = max(int(runtime_settings.get("bep20_topup_receipt_timeout_seconds") or 1), 1)
         nonce = client.eth.get_transaction_count(relayer_address)
         gas_price = int(client.eth.gas_price)
         relayer_balance_wei = int(client.eth.get_balance(relayer_address))
         gas_limit = 21000
-        runtime_settings = _get_bep20_runtime_settings()
         reserve_default = _safe_decimal(
             runtime_settings.get("relayer_reserve_bnb"),
             str(BEP20_RELAYER_RESERVE_BNB_DEFAULT),
@@ -1424,7 +1593,7 @@ def _topup_bep20_gas(wallet: Wallet) -> dict[str, Any]:
         signed = client.eth.account.sign_transaction(tx, private_key=relayer_key)
         raw_tx = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction", None)
         tx_hash = client.eth.send_raw_transaction(raw_tx)
-        receipt = client.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+        receipt = client.eth.wait_for_transaction_receipt(tx_hash, timeout=topup_receipt_timeout)
     except Exception as exc:
         return {"ok": False, "message": f"BEP20 gas top-up failed: {exc}"}
 
@@ -1489,6 +1658,9 @@ def sweep_wallet_to_main(wallet: Wallet) -> dict[str, Any]:
 
 
 def _sweep_tron(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[str, Any]:
+    runtime_settings = _get_bep20_runtime_settings()
+    tron_usdt_decimals = max(int(runtime_settings.get("tron_usdt_decimals") or 1), 1)
+    tron_decimals_factor = Decimal(10) ** Decimal(tron_usdt_decimals)
     client = _get_tron_client()
     contract = _get_tron_usdt_contract()
     if client is None or contract is None:
@@ -1553,7 +1725,7 @@ def _sweep_tron(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[s
         sweep.save(update_fields=["status", "error_message", "completed_at"])
         return {"ok": False, "message": sweep.error_message, "sweep": sweep}
 
-    transferred_amount = _safe_decimal(raw_balance) / Decimal("1000000")
+    transferred_amount = _safe_decimal(raw_balance) / tron_decimals_factor
     wallet.balance = Decimal("0")
     wallet.save(update_fields=["balance", "updated_at"])
 
@@ -1574,7 +1746,7 @@ def _sweep_bep20(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[
     client = _get_bep20_client()
     if client is None:
         sweep.status = Sweep.Status.FAILED
-        sweep.error_message = "BEP20 RPC is unavailable. Configure BEP20_RPC_URL in environment."
+        sweep.error_message = "BEP20 RPC is unavailable. Configure BEP20 RPC settings in admin panel."
         sweep.completed_at = timezone.now()
         sweep.save(update_fields=["status", "error_message", "completed_at"])
         return {"ok": False, "message": sweep.error_message, "sweep": sweep}
@@ -1595,9 +1767,14 @@ def _sweep_bep20(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[
         sweep.save(update_fields=["status", "error_message", "completed_at"])
         return {"ok": False, "message": sweep.error_message, "sweep": sweep}
 
+    runtime_settings = _get_bep20_runtime_settings()
+    bep20_usdt_contract = str(runtime_settings.get("bep20_usdt_contract") or "").strip() or BEP20_USDT_CONTRACT
+    bep20_usdt_decimals = max(int(runtime_settings.get("bep20_usdt_decimals") or 1), 1)
+    sweep_receipt_timeout = max(int(runtime_settings.get("bep20_sweep_receipt_timeout_seconds") or 1), 1)
+
     from_address = _to_checksum_address(client, wallet_account.address)
     to_address = _to_checksum_address(client, main_wallet.address)
-    token_address = _to_checksum_address(client, BEP20_USDT_CONTRACT)
+    token_address = _to_checksum_address(client, bep20_usdt_contract)
     if not from_address or not to_address or not token_address:
         sweep.status = Sweep.Status.FAILED
         sweep.error_message = "BEP20 wallet/token address is invalid."
@@ -1639,7 +1816,7 @@ def _sweep_bep20(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[
         signed = client.eth.account.sign_transaction(tx, private_key=wallet_key)
         raw_tx = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction", None)
         tx_hash = client.eth.send_raw_transaction(raw_tx)
-        receipt = client.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+        receipt = client.eth.wait_for_transaction_receipt(tx_hash, timeout=sweep_receipt_timeout)
     except Exception as exc:
         sweep.status = Sweep.Status.FAILED
         sweep.error_message = f"Sweep transaction failed: {exc}"
@@ -1654,7 +1831,7 @@ def _sweep_bep20(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[
         sweep.save(update_fields=["status", "error_message", "completed_at"])
         return {"ok": False, "message": sweep.error_message, "sweep": sweep}
 
-    decimals_factor = Decimal(10) ** Decimal(max(BEP20_USDT_DECIMALS, 0))
+    decimals_factor = Decimal(10) ** Decimal(max(bep20_usdt_decimals, 0))
     transferred_amount = _safe_decimal(raw_balance) / decimals_factor
     wallet.balance = Decimal("0")
     wallet.save(update_fields=["balance", "updated_at"])
@@ -1672,8 +1849,11 @@ def _sweep_bep20(wallet: Wallet, main_wallet: MainWallet, sweep: Sweep) -> dict[
 
 
 def get_public_usdt_balance(network: str, address: str) -> Decimal:
+    runtime_settings = _get_bep20_runtime_settings()
     selected_network = normalize_network(network)
     if selected_network == Wallet.Network.TRON:
+        tron_usdt_decimals = max(int(runtime_settings.get("tron_usdt_decimals") or 1), 1)
+        tron_decimals_factor = Decimal(10) ** Decimal(tron_usdt_decimals)
         try:
             contract = _get_tron_usdt_contract()
         except Exception:
@@ -1684,14 +1864,16 @@ def get_public_usdt_balance(network: str, address: str) -> Decimal:
             raw = contract.functions.balanceOf(address)
         except Exception:
             return Decimal("0")
-        return _safe_decimal(raw) / Decimal("1000000")
+        return _safe_decimal(raw) / tron_decimals_factor
 
     if selected_network == Wallet.Network.BEP20:
+        bep20_usdt_contract = str(runtime_settings.get("bep20_usdt_contract") or "").strip() or BEP20_USDT_CONTRACT
+        bep20_usdt_decimals = max(int(runtime_settings.get("bep20_usdt_decimals") or 1), 1)
         client = _get_bep20_client()
         if client is None:
             return Decimal("0")
         owner = _to_checksum_address(client, address)
-        token = _to_checksum_address(client, BEP20_USDT_CONTRACT)
+        token = _to_checksum_address(client, bep20_usdt_contract)
         if not owner or not token:
             return Decimal("0")
         try:
@@ -1699,7 +1881,7 @@ def get_public_usdt_balance(network: str, address: str) -> Decimal:
             raw = contract.functions.balanceOf(owner).call()
         except Exception:
             return Decimal("0")
-        decimals_factor = Decimal(10) ** Decimal(max(BEP20_USDT_DECIMALS, 0))
+        decimals_factor = Decimal(10) ** Decimal(max(bep20_usdt_decimals, 0))
         return _safe_decimal(raw) / decimals_factor
 
     return Decimal("0")
@@ -1741,7 +1923,7 @@ def get_relayer_balance_snapshot(network: str) -> dict[str, Any]:
         return snapshot
 
     if selected_network == Wallet.Network.BEP20 and _get_bep20_client() is None:
-        snapshot["message"] = "BEP20 RPC is unavailable. Configure BEP20_RPC_URL in environment."
+        snapshot["message"] = "BEP20 RPC is unavailable. Configure BEP20 RPC settings in admin panel."
         return snapshot
 
     try:

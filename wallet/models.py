@@ -112,17 +112,31 @@ class WalletServiceSetting(models.Model):
         RPC = "rpc", "RPC only"
         BSCSCAN = "bscscan", "BscScan only"
 
+    tron_endpoint_uri = models.CharField(max_length=500, default="https://api.trongrid.io")
+    tron_usdt_contract = models.CharField(max_length=255, default="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
+    tron_usdt_decimals = models.PositiveIntegerField(default=6)
+    tron_api_timeout_seconds = models.PositiveIntegerField(default=20)
+
+    bep20_usdt_contract = models.CharField(max_length=255, default="55d398326f99059fF775485246999027B3197955")
+    bep20_usdt_decimals = models.PositiveIntegerField(default=18)
+    bep20_explorer_chain_id = models.PositiveIntegerField(default=56)
+
     bep20_rpc_url = models.CharField(max_length=500, blank=True)
     fallback_bep20_rpc_url = models.CharField(max_length=500, blank=True)
     bep20_rpc_fallback_urls = models.TextField(blank=True)
+    bep20_rpc_timeout_seconds = models.PositiveIntegerField(default=15)
 
     bep20_autocheck_lookback_blocks = models.PositiveIntegerField(default=1000)
     bep20_initial_lookback_blocks = models.PositiveIntegerField(default=10000)
     bep20_autocheck_chunk_size = models.PositiveIntegerField(default=200)
     bep20_relayer_reserve_bnb = models.DecimalField(max_digits=20, decimal_places=8, default=Decimal("0.01"))
+    bep20_topup_receipt_timeout_seconds = models.PositiveIntegerField(default=180)
+    bep20_sweep_receipt_timeout_seconds = models.PositiveIntegerField(default=300)
 
     bscscan_api_url = models.CharField(max_length=500, default="https://api.etherscan.io/v2/api")
+    bscscan_v2_api_url = models.CharField(max_length=500, default="https://api.etherscan.io/v2/api")
     bscscan_api_key = models.CharField(max_length=255, blank=True)
+    explorer_timeout_seconds = models.PositiveIntegerField(default=20)
     bep20_deposit_source = models.CharField(
         max_length=20,
         choices=DepositSource.choices,
