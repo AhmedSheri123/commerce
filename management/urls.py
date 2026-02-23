@@ -29,6 +29,7 @@ urlpatterns = [
     path('users/edit/<int:user_id>/', views.editUser, name='edit_user'),
     path('users/delete/<int:user_id>/', views.deleteUser, name='delete_user'),
     path('users/analytics/<int:user_id>/', views.UserAnalytics, name='user_analytics'),
+    path('users/ip-geo/', views.user_ip_geo_api, name='user_ip_geo_api'),
     path('users/toggle-enabled/<int:user_id>/', views.toggleUserEnabled, name='toggle_user_enabled'),
     path('users/progress/delete/<int:user_id>/', views.deleteUserProgress, name='delete_user_progress'),
 

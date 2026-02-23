@@ -299,6 +299,7 @@
     if (!geoNodes.length) return;
 
     const geoCache = new Map();
+    const ipGeoApiUrl = "{% url 'management:user_ip_geo_api' %}";
 
     const isPrivateOrLocalIp = (ip) => {
       if (!ip) return true;
@@ -325,40 +326,25 @@
       return text || 'Unknown location';
     };
 
-    const readGeoFromPayload = (payload) => {
-      if (!payload || typeof payload !== 'object') return '';
-
-      if (payload.success === true || payload.success === undefined) {
-        const country = payload.country || payload.country_name || payload.countryCode || payload.country_code || '';
-        const region = payload.region || payload.region_name || payload.regionName || '';
-        const city = payload.city || '';
-        const result = formatGeo(country, region, city);
-        if (result !== 'Unknown location') return result;
-      }
-      return '';
-    };
-
     const fetchGeoForIp = async (ip) => {
       if (geoCache.has(ip)) return geoCache.get(ip);
 
-      const endpoints = [
-        'https://ipwho.is/' + encodeURIComponent(ip),
-        'https://ipapi.co/' + encodeURIComponent(ip) + '/json/',
-      ];
-
-      for (const url of endpoints) {
-        try {
-          const response = await fetch(url, { method: 'GET' });
-          if (!response.ok) continue;
+      const url = ipGeoApiUrl + '?ip=' + encodeURIComponent(ip);
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (response.ok) {
           const data = await response.json();
-          const geo = readGeoFromPayload(data);
-          if (geo) {
+          if (data && data.ok) {
+            const geo = data.label || formatGeo(data.country, data.region, data.city);
             geoCache.set(ip, geo);
             return geo;
           }
-        } catch (error) {
-          continue;
         }
+      } catch (error) {
+        // ignore and return fallback below
       }
 
       const fallback = 'Location unavailable';

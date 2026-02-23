@@ -1,3 +1,7 @@
+import ipaddress
+
+import requests
+from django.core.cache import cache
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.models import User
 from django.db.models import Q, Sum
@@ -32,6 +36,65 @@ from .forms import (
     SupportContactForm,
 )
 # Create your views here.
+
+
+def _format_geo_label(country: str = "", region: str = "", city: str = "") -> str:
+    parts = [str(country or "").strip(), str(region or "").strip(), str(city or "").strip()]
+    text = " - ".join([item for item in parts if item])
+    return text or "Unknown location"
+
+
+def _is_private_or_local_ip(ip: str) -> bool:
+    try:
+        parsed = ipaddress.ip_address(ip)
+    except ValueError:
+        return True
+    return (
+        parsed.is_private
+        or parsed.is_loopback
+        or parsed.is_link_local
+        or parsed.is_multicast
+        or parsed.is_reserved
+        or parsed.is_unspecified
+    )
+
+
+def _lookup_ipwho(ip: str, timeout_seconds: int = 6) -> dict | None:
+    response = requests.get(f"https://ipwho.is/{ip}", timeout=timeout_seconds)
+    response.raise_for_status()
+    payload = response.json()
+    if not payload or payload.get("success") is not True:
+        return None
+
+    country = payload.get("country") or payload.get("country_code") or ""
+    region = payload.get("region") or payload.get("region_name") or ""
+    city = payload.get("city") or ""
+    return {
+        "country": str(country),
+        "region": str(region),
+        "city": str(city),
+        "label": _format_geo_label(str(country), str(region), str(city)),
+        "provider": "ipwho.is",
+    }
+
+
+def _lookup_ipapi(ip: str, timeout_seconds: int = 6) -> dict | None:
+    response = requests.get(f"https://ipapi.co/{ip}/json/", timeout=timeout_seconds)
+    response.raise_for_status()
+    payload = response.json()
+    if not payload or payload.get("error") is True:
+        return None
+
+    country = payload.get("country_name") or payload.get("country") or ""
+    region = payload.get("region") or payload.get("region_code") or ""
+    city = payload.get("city") or ""
+    return {
+        "country": str(country),
+        "region": str(region),
+        "city": str(city),
+        "label": _format_geo_label(str(country), str(region), str(city)),
+        "provider": "ipapi.co",
+    }
 
 def index(request):
     users_qs = User.objects.all()
@@ -621,6 +684,65 @@ def deleteUserProgress(request, user_id):
     user = get_object_or_404(User, id=user_id)
     UserProgress.objects.filter(user=user).delete()
     return redirect('management:user_analytics', user_id=user.id)
+
+
+#=======================================
+
+
+@login_required
+def user_ip_geo_api(request):
+    if not request.user.is_superuser:
+        return JsonResponse({"ok": False, "message": "Forbidden."}, status=403)
+
+    ip = str(request.GET.get("ip") or "").strip()
+    if not ip:
+        return JsonResponse({"ok": False, "message": "IP is required."}, status=400)
+
+    try:
+        ipaddress.ip_address(ip)
+    except ValueError:
+        return JsonResponse({"ok": False, "message": "Invalid IP address."}, status=400)
+
+    if _is_private_or_local_ip(ip):
+        return JsonResponse(
+            {
+                "ok": True,
+                "ip": ip,
+                "private": True,
+                "country": "",
+                "region": "",
+                "city": "",
+                "label": "Private / Local IP",
+                "provider": "",
+            }
+        )
+
+    cache_key = f"user_ip_geo::{ip}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, dict):
+        return JsonResponse({"ok": True, **cached})
+
+    for resolver in (_lookup_ipwho, _lookup_ipapi):
+        try:
+            data = resolver(ip)
+        except Exception:
+            data = None
+        if isinstance(data, dict):
+            result = {"ip": ip, "private": False, **data}
+            cache.set(cache_key, result, 60 * 60 * 24)
+            return JsonResponse({"ok": True, **result})
+
+    fallback = {
+        "ip": ip,
+        "private": False,
+        "country": "",
+        "region": "",
+        "city": "",
+        "label": "Location unavailable",
+        "provider": "",
+    }
+    cache.set(cache_key, fallback, 60 * 15)
+    return JsonResponse({"ok": True, **fallback})
 
 
 #=======================================
