@@ -785,9 +785,7 @@ def approveWithdrawal(request, tx_id):
         return redirect('management:withdrawals')
 
     profile = tx.user.profile
-    if profile.balance < tx.amount:
-        messages.error(request, "الرصيد غير كافٍ لاعتماد السحب.")
-        return redirect('management:withdrawals')
+
 
     profile.disable_ordering_unitl_withdrawal = False
     profile.has_withdrawn = True
