@@ -395,7 +395,6 @@ def active_users_count_api(request):
 def transactions(request):
     user = request.user
     profile = user.profile
-    user_progress = user.progress if hasattr(user, 'progress') else None
     transactions = user.transactions.all().order_by('-created_at')
 
 
@@ -405,28 +404,24 @@ def transactions(request):
 
         if action == 'withdraw':
             wallet_address = request.POST.get('wallet_address', '').strip()
-            if user_progress:
-                if user_progress.is_done:
-                    if amount > 0 and wallet_address:
-                        if profile.balance >= amount:  # Ensure enough balance before creating withdrawal
-                            # Create pending withdrawal and deduct balance immediately
-                            Transaction.objects.create(
-                                user=user,
-                                transaction_type='withdraw',
-                                amount=amount,
-                                wallet_address=wallet_address,
-                                status='pending'
-                            )
-                            profile.balance -= amount
-                            profile.save()
-                            messages.success(request, f"Withdrawal request for {amount} USDT submitted successfully.")
-                            return redirect('accounts:transactions')
-                        else:
-                            messages.error(request, "Insufficient balance.")
-                    else:
-                        messages.error(request, "Please enter a valid amount and wallet address.")
+            if amount > 0 and wallet_address:
+                if profile.balance >= amount:  # Ensure enough balance before creating withdrawal
+                    # Create pending withdrawal and deduct balance immediately
+                    Transaction.objects.create(
+                        user=user,
+                        transaction_type='withdraw',
+                        amount=amount,
+                        wallet_address=wallet_address,
+                        status='pending'
+                    )
+                    profile.balance -= amount
+                    profile.save()
+                    messages.success(request, f"Withdrawal request for {amount} USDT submitted successfully.")
+                    return redirect('accounts:transactions')
                 else:
-                    messages.error(request, "You must complete the required steps before making a withdrawal.")
+                    messages.error(request, "Insufficient balance.")
+            else:
+                messages.error(request, "Please enter a valid amount and wallet address.")
         elif action == 'cancel_withdraw':
             tx_id = request.POST.get('tx_id')
             tx = Transaction.objects.filter(

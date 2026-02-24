@@ -683,6 +683,9 @@ def UserAnalytics(request, user_id):
 def deleteUserProgress(request, user_id):
     user = get_object_or_404(User, id=user_id)
     UserProgress.objects.filter(user=user).delete()
+    profile = user.profile
+    profile.disable_ordering_unitl_withdrawal = False
+    profile.save()
     return redirect('management:user_analytics', user_id=user.id)
 
 
