@@ -17,7 +17,7 @@ def _visible_platforms_for_user(user):
         )
     if p.filter(visible_to_users=user).exists():
         return p.filter(visible_to_users=user).distinct()
-    return p.distinct()
+    return p.filter(visible_to_users__isnull=True).distinct()
 
 
 def _get_progress_for_platform(user, platform_id):
