@@ -4,13 +4,25 @@ from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductMode
 
 
 class PlatformForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        visible_field = self.fields["visible_to_users"]
+        visible_field.queryset = visible_field.queryset.order_by("username")
+        visible_field.help_text = "ابحث عن المستخدمين داخل الحقل ثم اخترهم."
+
     class Meta:
         model = PlatformModel
-        fields = ["name", "show_only_from_not_verified_source", "image", 'msg']
+        fields = ["name", "show_only_from_not_verified_source", "visible_to_users", "image", "msg"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
             "msg": forms.Textarea(attrs={"class": "form-textarea"}),
             "show_only_from_not_verified_source": forms.CheckboxInput(attrs={"class": "border border-gray-300 rounded"}),
+            "visible_to_users": forms.SelectMultiple(
+                attrs={
+                    "class": "form-select",
+                    "data-placeholder": "ابحث عن مستخدم",
+                }
+            ),
             "image": forms.ClearableFileInput(attrs={"class": "form-file-input"}),
         }
 

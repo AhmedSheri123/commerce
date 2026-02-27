@@ -12,6 +12,13 @@ class PlatformModel(models.Model):
     msg = models.TextField(blank=True, null=True, verbose_name="رسالة")
     show_only_from_not_verified_source = models.BooleanField(default=False, help_text="اعرض فقط للاشخاص من مصدر غير موثوق؟")
 
+    visible_to_users = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="platform_visibility",
+        help_text="If empty, this platform is visible to all matching users.",
+    )
+
     def __str__(self):
         return self.name
     

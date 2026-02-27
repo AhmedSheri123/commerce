@@ -2,11 +2,22 @@ import time
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from orders.models import OrderModel
 from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductGroupSuggestion, UserProgress
+
+
+def _visible_platforms_for_user(user):
+    profile = user.profile
+    p = PlatformModel.objects.filter(
+            show_only_from_not_verified_source=not profile.from_verified_source
+        )
+    if p.filter(visible_to_users=user).exists():
+        return p.filter(visible_to_users=user).distinct()
+    return p.distinct()
 
 
 def _get_progress_for_platform(user, platform_id):
@@ -47,10 +58,7 @@ def _active_group(user, platform_id):
 @login_required
 def products(request):
     user = request.user
-    profile = user.profile
-    platforms = PlatformModel.objects.filter(
-        show_only_from_not_verified_source=not (profile.from_verified_source)
-    )
+    platforms = _visible_platforms_for_user(user)
 
     progress = getattr(user, "progress", None)
     is_done = progress.is_done if progress else False
@@ -70,7 +78,7 @@ def view_product_ajax(request):
     if not platform_id:
         return JsonResponse({"data": [], "msg": None})
 
-    platform = PlatformModel.objects.filter(id=platform_id).first()
+    platform = _visible_platforms_for_user(user).filter(id=platform_id).first()
     if not platform:
         return JsonResponse({"data": [], "msg": None})
 
@@ -129,16 +137,17 @@ def view_product_ajax(request):
 
 @login_required
 def view_products_ajax(request):
+    user = request.user
     platform_id = request.GET.get("platform_id")
     if not platform_id:
         return JsonResponse({"data": None})
 
-    platform = PlatformModel.objects.filter(id=platform_id).first()
+    platform = _visible_platforms_for_user(user).filter(id=platform_id).first()
     if not platform:
         return JsonResponse({"data": None})
 
-    progress = _get_progress_for_platform(request.user, platform_id)
-    active = _active_group(request.user, platform_id)
+    progress = _get_progress_for_platform(user, platform_id)
+    active = _active_group(user, platform_id)
 
     category = None
     if active:
@@ -197,6 +206,9 @@ def buy_product_ajax(request):
     group = ProductGroupModel.objects.select_related("category", "category__platform").filter(id=group_id).first()
     if not group:
         return JsonResponse({"message": "Group not found.", "status": "error"})
+
+    if not _visible_platforms_for_user(user).filter(id=group.category.platform_id).exists():
+        return JsonResponse({"message": "This platform is not available for your account.", "status": "error"})
 
     active = _active_group(user, group.category.platform_id)
     if not active or active.id != group.id:
