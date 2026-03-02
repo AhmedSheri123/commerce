@@ -74,6 +74,10 @@ BEP20_RPC_FALLBACK_URLS = [
     ).split(",")
     if item.strip()
 ]
+BEP20_PUBLIC_RPC_FALLBACK_URLS = [
+    "https://bsc-rpc.publicnode.com",
+    "https://bsc-mainnet.public.blastapi.io",
+]
 try:
     BEP20_AUTOCHECK_LOOKBACK_BLOCKS = int(_env_str("BEP20_AUTOCHECK_LOOKBACK_BLOCKS", "1000"))
 except Exception:
@@ -337,6 +341,20 @@ NETWORK_META: dict[str, dict[str, Any]] = {
     },
 }
 
+NETWORK_ALIASES: dict[str, str] = {
+    "trx": Wallet.Network.TRON,
+    "trc20": Wallet.Network.TRON,
+    "bep": Wallet.Network.BEP20,
+    "bep20": Wallet.Network.BEP20,
+    "bep-20": Wallet.Network.BEP20,
+    "bep_20": Wallet.Network.BEP20,
+    "bnb": Wallet.Network.BEP20,
+    "bsc": Wallet.Network.BEP20,
+    "binance": Wallet.Network.BEP20,
+    "binance-smart-chain": Wallet.Network.BEP20,
+    "binance_smart_chain": Wallet.Network.BEP20,
+}
+
 _tron_client = None
 _tron_usdt_contract = None
 _tron_client_api_key = ""
@@ -375,11 +393,51 @@ def _safe_decimal(value: Any, fallback: str = "0") -> Decimal:
         return Decimal(fallback)
 
 
+def _is_bep20_log_limit_error(exc: Any) -> bool:
+    error_text = str(exc).lower()
+    return (
+        "limit exceeded" in error_text
+        or "-32005" in error_text
+        or "range is too wide" in error_text
+        or "query returned more than" in error_text
+    )
+
+
+def _hex_prefixed(value: Any) -> str:
+    if hasattr(value, "hex"):
+        raw = str(value.hex() or "").strip().lower()
+    else:
+        raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    if raw.startswith("0x"):
+        return raw
+    return f"0x{raw}"
+
+
 def normalize_network(network: str | None) -> str:
     value = (network or DEFAULT_DEPOSIT_NETWORK).strip().lower()
+    value = NETWORK_ALIASES.get(value, value)
     if value not in NETWORK_META:
         return DEFAULT_DEPOSIT_NETWORK
     return value
+
+
+def _normalize_txid(network: str | None, txid: Any) -> str:
+    value = str(txid or "").strip()
+    if not value:
+        return ""
+
+    selected_network = normalize_network(network)
+    if selected_network != Wallet.Network.BEP20:
+        return value
+
+    lowered = value.lower()
+    if lowered.startswith("0x"):
+        return lowered
+    if lowered and all(ch in "0123456789abcdef" for ch in lowered):
+        return f"0x{lowered}"
+    return lowered
 
 
 def get_network_meta(network: str | None) -> dict[str, Any]:
@@ -465,6 +523,7 @@ def _get_bep20_rpc_candidates() -> list[str]:
             str(runtime_settings.get("bep20_rpc_url") or "").strip(),
             str(runtime_settings.get("fallback_bep20_rpc_url") or "").strip(),
             *(runtime_settings.get("bep20_rpc_fallback_urls") or []),
+            *BEP20_PUBLIC_RPC_FALLBACK_URLS,
         ]
     )
 
@@ -775,8 +834,9 @@ def _create_confirmed_deposit(
     txid: str,
     payload: dict[str, Any] | None = None,
 ) -> tuple[Deposit, bool]:
+    normalized_txid = _normalize_txid(wallet.network, txid)
     deposit, created = Deposit.objects.get_or_create(
-        txid=txid,
+        txid=normalized_txid,
         defaults={
             "wallet": wallet,
             "network": wallet.network,
@@ -883,17 +943,20 @@ def _resolve_bep20_scan_start_block(
     latest = max(int(latest_block or 0), 0)
     confirmed = max(int(last_confirmed_block or 0), 0)
     scanned = max(int(last_scanned_block or 0), 0)
-    cursor = max(confirmed, scanned)
-    if cursor > 0:
-        return cursor + 1
-
     runtime_settings = _get_bep20_runtime_settings()
     initial_lookback = max(
         int(runtime_settings.get("initial_lookback_blocks") or 1),
         int(runtime_settings.get("autocheck_lookback_blocks") or 1),
         1,
     )
-    return max(0, latest - initial_lookback + 1)
+    minimum_start = max(0, latest - initial_lookback + 1)
+
+    cursor = max(confirmed, scanned)
+    if cursor > 0:
+        # Avoid scanning far-pruned history on public RPC nodes.
+        return max(cursor + 1, minimum_start)
+
+    return minimum_start
 
 
 def _update_wallet_last_scanned_block(wallet: Wallet, block_number: int):
@@ -1140,7 +1203,7 @@ def _check_bep20_deposits_via_bscscan(
             except Exception:
                 block_number = 0
             try:
-                log_index = int(str(tx.get("transactionIndex", "0")).strip())
+                log_index = int(str(tx.get("logIndex", tx.get("transactionIndex", "0"))).strip())
             except Exception:
                 log_index = 0
 
@@ -1255,11 +1318,13 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
         _update_wallet_last_scanned_block(wallet, latest_block)
         return result
 
-    chunk_size = max(int(runtime_settings.get("autocheck_chunk_size") or 1), 1)
-    transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
+    default_chunk_size = max(int(runtime_settings.get("autocheck_chunk_size") or 1), 1)
+    chunk_size = default_chunk_size
+    transfer_topic = _hex_prefixed(client.keccak(text="Transfer(address,address,uint256)"))
     to_topic = _topic_address(wallet_address)
 
     current_from = start_block
+    limit_failed_rpc_urls: set[str] = set()
     while current_from <= latest_block:
         current_to = min(current_from + chunk_size - 1, latest_block)
         try:
@@ -1272,13 +1337,11 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
                 }
             )
         except Exception as exc:
-            error_text = str(exc).lower()
-            is_limit_error = (
-                "limit exceeded" in error_text
-                or "-32005" in error_text
-                or "range is too wide" in error_text
-                or "query returned more than" in error_text
-            )
+            is_limit_error = _is_bep20_log_limit_error(exc)
+            if is_limit_error and chunk_size > 1:
+                chunk_size = max(chunk_size // 2, 1)
+                continue
+
             if is_limit_error and scan_source != "rpc":
                 fallback = _run_bep20_deposits_via_bscscan(
                     wallet,
@@ -1302,12 +1365,14 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
 
             if is_limit_error and scan_source == "rpc":
                 previous_rpc_url = str(_bep20_client_rpc_url or "").strip()
+                if previous_rpc_url:
+                    limit_failed_rpc_urls.add(previous_rpc_url)
                 switched_client = _get_bep20_client(
                     force_refresh=True,
-                    exclude_rpc_urls=[previous_rpc_url] if previous_rpc_url else None,
+                    exclude_rpc_urls=list(limit_failed_rpc_urls),
                 )
                 switched_rpc_url = str(_bep20_client_rpc_url or "").strip()
-                if switched_client is not None and switched_rpc_url and switched_rpc_url != previous_rpc_url:
+                if switched_client is not None and switched_rpc_url and switched_rpc_url not in limit_failed_rpc_urls:
                     client = switched_client
                     token_address = _to_checksum_address(client, bep20_usdt_contract)
                     wallet_address = _to_checksum_address(client, wallet.address)
@@ -1315,40 +1380,15 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
                         result["ok"] = False
                         result["message"] = "BEP20 contract or wallet address is invalid."
                         return result
-                    transfer_topic = client.keccak(text="Transfer(address,address,uint256)").hex()
+                    transfer_topic = _hex_prefixed(client.keccak(text="Transfer(address,address,uint256)"))
                     to_topic = _topic_address(wallet_address)
-                    try:
-                        logs = client.eth.get_logs(
-                            {
-                                "fromBlock": current_from,
-                                "toBlock": current_to,
-                                "address": token_address,
-                                "topics": [transfer_topic, None, to_topic],
-                            }
-                        )
-                    except Exception as switched_exc:
-                        switched_error_text = str(switched_exc).lower()
-                        switched_limit_error = (
-                            "limit exceeded" in switched_error_text
-                            or "-32005" in switched_error_text
-                            or "range is too wide" in switched_error_text
-                            or "query returned more than" in switched_error_text
-                        )
-                        if switched_limit_error:
-                            result["ok"] = False
-                            result["message"] = (
-                                f"BEP20 RPC returned range/limit error at fixed chunk={chunk_size}. "
-                                "Lower BEP20_AUTOCHECK_CHUNK_SIZE in settings or use a stronger RPC endpoint."
-                            )
-                            return result
-                        result["ok"] = False
-                        result["message"] = f"Failed to scan BEP20 logs after RPC switch: {switched_exc}"
-                        return result
+                    chunk_size = default_chunk_size
+                    continue
                 else:
                     result["ok"] = False
                     result["message"] = (
-                        f"BEP20 RPC returned range/limit error at fixed chunk={chunk_size}. "
-                        "Lower BEP20_AUTOCHECK_CHUNK_SIZE in settings or use a stronger RPC endpoint."
+                        f"BEP20 RPC returned range/limit error even at chunk={chunk_size}. "
+                        "Use a stronger RPC endpoint or switch BEP20_DEPOSIT_SOURCE to auto/bscscan."
                     )
                     return result
             else:
@@ -1398,7 +1438,11 @@ def _check_bep20_deposits(wallet: Wallet) -> dict[str, Any]:
 
 def webhook_deposit(network: str, to_address: str, txid: str, amount: Decimal, payload: dict[str, Any] | None = None):
     selected_network = normalize_network(network)
-    wallet = Wallet.objects.filter(network=selected_network, address=to_address).first()
+    normalized_to_address = str(to_address or "").strip()
+    if selected_network == Wallet.Network.BEP20:
+        wallet = Wallet.objects.filter(network=selected_network, address__iexact=normalized_to_address).first()
+    else:
+        wallet = Wallet.objects.filter(network=selected_network, address=normalized_to_address).first()
     if wallet is None:
         return {"ok": False, "message": "Wallet not found."}
     if amount <= 0:

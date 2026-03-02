@@ -6,10 +6,14 @@ from wallet.services import (
     _calculate_affordable_native_transfer_wei,
     _decode_hex_message,
     _decode_log_uint256,
+    _hex_prefixed,
+    _is_bep20_log_limit_error,
+    _normalize_txid,
     _resolve_bep20_scan_start_block,
     _set_deposit_result_message,
     _tron_tx_error_message,
     build_qr_payload,
+    normalize_network,
 )
 
 
@@ -26,6 +30,29 @@ class BuildQrPayloadTests(SimpleTestCase):
         self.assertEqual(build_qr_payload("tron", "   "), "")
 
 
+class NormalizeNetworkTests(SimpleTestCase):
+    def test_maps_bep_aliases_to_bep20(self):
+        self.assertEqual(normalize_network("bep"), "bep20")
+        self.assertEqual(normalize_network("bnb"), "bep20")
+        self.assertEqual(normalize_network("bsc"), "bep20")
+
+    def test_maps_tron_aliases_to_tron(self):
+        self.assertEqual(normalize_network("trx"), "tron")
+        self.assertEqual(normalize_network("trc20"), "tron")
+
+    def test_defaults_unknown_network_to_tron(self):
+        self.assertEqual(normalize_network("unknown-network"), "tron")
+
+
+class NormalizeTxidTests(SimpleTestCase):
+    def test_normalizes_bep20_hashes_to_lowercase_hex_prefixed(self):
+        self.assertEqual(_normalize_txid("bep20", "0xABCDEF"), "0xabcdef")
+        self.assertEqual(_normalize_txid("bep20", "ABCDEF"), "0xabcdef")
+
+    def test_keeps_tron_txid_as_is(self):
+        self.assertEqual(_normalize_txid("tron", "AA11bbCC"), "AA11bbCC")
+
+
 class DecodeLogUint256Tests(SimpleTestCase):
     def test_decodes_from_bytes(self):
         self.assertEqual(_decode_log_uint256(bytes.fromhex("000000000000000000000000000000000000000000000000000000000000000a")), 10)
@@ -35,6 +62,25 @@ class DecodeLogUint256Tests(SimpleTestCase):
 
     def test_returns_zero_for_invalid_value(self):
         self.assertEqual(_decode_log_uint256("not-hex"), 0)
+
+
+class Bep20LogLimitErrorTests(SimpleTestCase):
+    def test_detects_known_limit_error_markers(self):
+        self.assertTrue(_is_bep20_log_limit_error("limit exceeded"))
+        self.assertTrue(_is_bep20_log_limit_error("error -32005"))
+        self.assertTrue(_is_bep20_log_limit_error("range is too wide"))
+        self.assertTrue(_is_bep20_log_limit_error("query returned more than 10000 results"))
+
+    def test_ignores_other_errors(self):
+        self.assertFalse(_is_bep20_log_limit_error("connection refused"))
+
+
+class HexPrefixedTests(SimpleTestCase):
+    def test_adds_0x_prefix_when_missing(self):
+        self.assertEqual(_hex_prefixed("abcdef"), "0xabcdef")
+
+    def test_keeps_existing_0x_prefix(self):
+        self.assertEqual(_hex_prefixed("0xabcdef"), "0xabcdef")
 
 
 class AffordableTransferWeiTests(SimpleTestCase):
@@ -104,6 +150,19 @@ class ResolveBep20ScanStartBlockTests(SimpleTestCase):
         )
         expected = max(0, 5000 - max(BEP20_INITIAL_LOOKBACK_BLOCKS, BEP20_AUTOCHECK_LOOKBACK_BLOCKS, 1) + 1)
         self.assertEqual(result, expected)
+
+    def test_clamps_stale_cursor_to_recent_lookback_window(self):
+        latest = 500000
+        result = _resolve_bep20_scan_start_block(
+            latest_block=latest,
+            last_confirmed_block=120000,
+            last_scanned_block=130000,
+        )
+        expected_floor = max(
+            0,
+            latest - max(BEP20_INITIAL_LOOKBACK_BLOCKS, BEP20_AUTOCHECK_LOOKBACK_BLOCKS, 1) + 1,
+        )
+        self.assertEqual(result, expected_floor)
 
 
 class DepositResultMessageTests(SimpleTestCase):
