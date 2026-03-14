@@ -682,7 +682,7 @@ def UserAnalytics(request, user_id):
 @require_POST
 def deleteUserProgress(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    progress = UserProgress.objects.filter(user=user)
+    progress = UserProgress.objects.get(user=user)
     profile = user.profile
     profile.disable_ordering_unitl_withdrawal = False
     profile.save()
