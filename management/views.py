@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 from products.forms import PlatformForm, CategoryForm, ProductForm, ProductGroupForm
-from products.models import ProductModel, CategoryModel, PlatformModel, ProductGroupModel
+from products.models import ProductModel, CategoryModel, PlatformModel, ProductGroupModel, ProductGroupSuggestion
 from accounts.models import (
     UserProfile,
     Transaction,
@@ -682,10 +682,12 @@ def UserAnalytics(request, user_id):
 @require_POST
 def deleteUserProgress(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    UserProgress.objects.filter(user=user).delete()
+    progress = UserProgress.objects.filter(user=user)
     profile = user.profile
     profile.disable_ordering_unitl_withdrawal = False
     profile.save()
+    ProductGroupSuggestion.objects.filter(product_group__category__platform_id=progress.product_group.category.platform_id, user=user).delete()
+    progress.delete()
     return redirect('management:user_analytics', user_id=user.id)
 
 
