@@ -267,7 +267,8 @@ def buy_product_ajax(request):
     profile.save()
     return JsonResponse(
         {
-            "message": f"لقد تم الاستثمار بالمجموعة بنجاح. وكسبت مبلغ وقدره {round(total_profit, 2)}$",
+            # "message": f"لقد تم الاستثمار بالمجموعة بنجاح. وكسبت مبلغ وقدره {round(total_profit, 2)}$",
+            "message": f"تم الاستثمار بالمجموعة بنجاح",
             "status": "success",
             "is_done": is_done,
         }
