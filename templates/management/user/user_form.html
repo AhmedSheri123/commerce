@@ -72,6 +72,10 @@
                         <label class="text-sm text-gray-900 dark:text-white">{{ profile_form.from_verified_source.label }}</label>
                     </div>
                     <div class="flex items-center gap-2">
+                        {{ profile_form.forced_withdrawal }}
+                        <label class="text-sm text-gray-900 dark:text-white">{{ profile_form.forced_withdrawal.label }}</label>
+                    </div>
+                    <div class="flex items-center gap-2">
                         {{ profile_form.is_enabled }}
                         <label class="text-sm text-gray-900 dark:text-white">{{ profile_form.is_enabled.label }}</label>
                     </div>
