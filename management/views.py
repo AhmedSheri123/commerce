@@ -656,8 +656,16 @@ def UserAnalytics(request, user_id):
                 progress.product_group = product_group
                 progress.save()
             else:
-                UserProgress.objects.create(user=user, product_group=product_group)
+                progress = UserProgress.objects.create(user=user, product_group=product_group)
+
+            ProductGroupSuggestion.objects.filter(product_group__category__platform_id=progress.product_group.category.platform_id, user=user).delete()
+            is_done = progress.is_done if progress else False
+            if is_done and profile.forced_withdrawal:
+                profile.disable_ordering_unitl_withdrawal = True
+            else:
+                profile.has_withdrawn = False
             return redirect('management:user_analytics', user_id=user.id)
+        
     else:
         if progress:
             form = UserProgressForm(initial={

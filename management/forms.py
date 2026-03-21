@@ -101,12 +101,13 @@ class UserUpdateForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["balance", "total_earned", "is_verified", "from_verified_source", "is_enabled"]
+        fields = ["balance", "total_earned", "is_verified", "from_verified_source", 'forced_withdrawal', "is_enabled"]
         labels = {
             "balance": "الرصيد",
             "total_earned": "إجمالي الأرباح",
             "is_verified": "موثق",
             "from_verified_source": "من مصدر موثوق",
+            "forced_withdrawal":"سحب اجباري",
             "is_enabled": "الحساب مفعّل",
         }
 
