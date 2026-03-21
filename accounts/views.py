@@ -405,7 +405,7 @@ def transactions(request):
 
         if action == 'withdraw':
             wallet_address = request.POST.get('wallet_address', '').strip()
-            if progress:
+            if getattr(progress, "is_done", None):
                 if amount > 0 and wallet_address:
                     if profile.balance >= amount:  # Ensure enough balance before creating withdrawal
                         # Create pending withdrawal and deduct balance immediately
