@@ -297,7 +297,7 @@ def editCategory(request, category_id):
     return render(request, 'management/category/add_category.html', {'form': form, 'plateform': plateform})
 
 def DeleteCategory(request, category_id):
-    plateform = CategoryForm.objects.get(id=category_id)
+    plateform = CategoryModel.objects.get(id=category_id)
     plateform_id = plateform.platform.id
     plateform.delete()
     return redirect('management:categories', plateform_id)
