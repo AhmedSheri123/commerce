@@ -16,7 +16,8 @@ def _visible_platforms_for_user(user):
             show_only_from_not_verified_source=not profile.from_verified_source
         )
     if p.filter(visible_to_users=user).exists():
-        return p.filter(visible_to_users=user).distinct()
+        p = p.filter(visible_to_users=user).distinct()
+    p = p | PlatformModel.objects.filter(show_to_all=True)
     return p.filter(visible_to_users__isnull=True).distinct()
 
 

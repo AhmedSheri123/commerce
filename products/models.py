@@ -11,7 +11,7 @@ class PlatformModel(models.Model):
     image = models.ImageField(upload_to='platform_images/', null=True, blank=True)
     msg = models.TextField(blank=True, null=True, verbose_name="رسالة")
     show_only_from_not_verified_source = models.BooleanField(default=False, help_text="اعرض فقط للاشخاص من مصدر غير موثوق؟")
-
+    show_to_all = models.BooleanField(default=False)
     visible_to_users = models.ManyToManyField(
         User,
         blank=True,
