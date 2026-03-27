@@ -8,17 +8,35 @@ from django.shortcuts import render
 from django.utils import timezone
 from orders.models import OrderModel
 from .models import CategoryModel, PlatformModel, ProductGroupModel, ProductGroupSuggestion, UserProgress
+from itertools import chain
+
 
 
 def _visible_platforms_for_user(user):
     profile = user.profile
-    p = PlatformModel.objects.filter(
-            show_only_from_not_verified_source=not profile.from_verified_source
-        )
-    if p.filter(visible_to_users=user).exists():
-        p = p.filter(visible_to_users=user).distinct()
-    p = p | PlatformModel.objects.filter(show_to_all=True)
-    return p.filter(visible_to_users__isnull=True).distinct()
+
+    # الفلترة الأساسية
+    base_qs = PlatformModel.objects.filter(
+        show_only_from_not_verified_source=not profile.from_verified_source
+    )
+
+    # المنصات المخصصة للمستخدم
+    user_qs = base_qs.filter(visible_to_users=user)
+
+    # المنصات العامة
+    public_qs = base_qs.filter(visible_to_users__isnull=True)
+
+    # المنصات التي تظهر للجميع
+    global_qs = PlatformModel.objects.filter(show_to_all=True)
+
+    if user_qs.exists():
+        # دمج الكل بدون تحويل إلى list
+        qs = (user_qs | public_qs | global_qs).distinct()
+    else:
+        qs = public_qs | global_qs
+
+    # الترتيب (عدّل الحقل حسب حاجتك)
+    return qs.order_by("sort_order", "id")
 
 
 def _get_progress_for_platform(user, platform_id):

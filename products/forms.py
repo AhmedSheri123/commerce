@@ -12,11 +12,12 @@ class PlatformForm(forms.ModelForm):
 
     class Meta:
         model = PlatformModel
-        fields = ["name", "show_only_from_not_verified_source", "visible_to_users", "image", "msg"]
+        fields = ["name", "show_only_from_not_verified_source", "show_to_all", "visible_to_users", "image", "msg"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
             "msg": forms.Textarea(attrs={"class": "form-textarea"}),
             "show_only_from_not_verified_source": forms.CheckboxInput(attrs={"class": "border border-gray-300 rounded"}),
+            "show_to_all": forms.CheckboxInput(attrs={"class": "border border-gray-300 rounded"}),
             "visible_to_users": forms.SelectMultiple(
                 attrs={
                     "class": "form-select",
