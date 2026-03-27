@@ -31,7 +31,7 @@ def _visible_platforms_for_user(user):
 
     if user_qs.exists():
         # دمج الكل بدون تحويل إلى list
-        qs = (user_qs | public_qs | global_qs).distinct()
+        qs = (user_qs | global_qs).distinct()
     else:
         qs = public_qs | global_qs
 
