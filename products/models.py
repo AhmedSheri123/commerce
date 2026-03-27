@@ -18,6 +18,7 @@ class PlatformModel(models.Model):
         related_name="platform_visibility",
         help_text="If empty, this platform is visible to all matching users.",
     )
+    sort_order = models.IntegerField(default=0, help_text="ترتيب العرض. المنصات ذات الرقم الأقل تظهر أولاً.")
 
     def __str__(self):
         return self.name

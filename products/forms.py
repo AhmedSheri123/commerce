@@ -12,7 +12,7 @@ class PlatformForm(forms.ModelForm):
 
     class Meta:
         model = PlatformModel
-        fields = ["name", "show_only_from_not_verified_source", "show_to_all", "visible_to_users", "image", "msg"]
+        fields = ["name", "show_only_from_not_verified_source", "show_to_all", "visible_to_users", "image", "msg", "sort_order"]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-input"}),
             "msg": forms.Textarea(attrs={"class": "form-textarea"}),
