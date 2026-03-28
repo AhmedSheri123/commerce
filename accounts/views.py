@@ -156,7 +156,6 @@ def notifications_page(request):
     )
 
 
-@login_required
 def support_page(request):
     contacts = SupportContact.objects.filter(is_active=True).order_by("order", "id")
     return render(
