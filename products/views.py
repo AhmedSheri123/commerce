@@ -21,7 +21,7 @@ def _visible_platforms_for_user(user):
     )
 
     # المنصات المخصصة للمستخدم
-    user_qs = base_qs.filter(visible_to_users=user)
+    user_qs = PlatformModel.objects.filter(visible_to_users=user)
 
     # المنصات العامة
     public_qs = base_qs.filter(visible_to_users__isnull=True)
