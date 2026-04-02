@@ -32,6 +32,7 @@ urlpatterns = [
     path('users/ip-geo/', views.user_ip_geo_api, name='user_ip_geo_api'),
     path('users/toggle-enabled/<int:user_id>/', views.toggleUserEnabled, name='toggle_user_enabled'),
     path('users/progress/delete/<int:user_id>/', views.deleteUserProgress, name='delete_user_progress'),
+    path('users/suggestion/delete/<int:progress_id>/', views.DeleteProductGroupSuggestion, name='delete_product_group_suggestion'),
 
     path('withdrawals/', views.ViewWithdrawals, name='withdrawals'),
     path('withdrawals/approve/<int:tx_id>/', views.approveWithdrawal, name='approve_withdrawal'),

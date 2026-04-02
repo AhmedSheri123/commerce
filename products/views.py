@@ -234,7 +234,10 @@ def buy_product_ajax(request):
         return JsonResponse({"message": "This group is not the current active group.", "status": "error"})
 
     if not profile or not profile.is_enabled:
-        return JsonResponse({"message": "حسابك غير مفعل, لا يمكنك العمل معنا", "status": "error"})
+        return JsonResponse({"message": "The request could not be processed", "status": "error"})
+
+    if not profile or profile.freezen:
+        return JsonResponse({"message": "The request could not be processed.", "status": "error"})
 
     suggestion, suggested_total = ProductGroupSuggestion.get_or_create_suggestion(user, group)
     if not suggestion:
@@ -243,7 +246,7 @@ def buy_product_ajax(request):
     if float(suggested_total) > float(profile.balance):
         return JsonResponse(
             {
-                "message": f"رصيدك غير كاف. يجب عليك ايداع مبلغ وقدره ${round(float(suggested_total) - float(profile.balance), 2)}",
+                "message": f"Your balance is insufficient. You must deposit the amount of ${round(float(suggested_total) - float(profile.balance), 2)}",
                 "status": "error",
             }
         )
@@ -287,7 +290,7 @@ def buy_product_ajax(request):
     return JsonResponse(
         {
             # "message": f"لقد تم الاستثمار بالمجموعة بنجاح. وكسبت مبلغ وقدره {round(total_profit, 2)}$",
-            "message": f"تم الاستثمار بالمجموعة بنجاح",
+            "message": f"The investment in the group was successful.",
             "status": "success",
             "is_done": is_done,
         }

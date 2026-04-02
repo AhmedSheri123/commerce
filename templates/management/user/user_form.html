@@ -79,6 +79,10 @@
                         {{ profile_form.is_enabled }}
                         <label class="text-sm text-gray-900 dark:text-white">{{ profile_form.is_enabled.label }}</label>
                     </div>
+                    <div class="flex items-center gap-2">
+                        {{ profile_form.freezen }}
+                        <label class="text-sm text-gray-900 dark:text-white">{{ profile_form.freezen.label }}</label>
+                    </div>
                 </div>
 
                 {% if mode == 'add' %}

@@ -48,11 +48,14 @@ class UserProfile(models.Model):
         default=False,
         help_text="Whether the user has already withdrawn at least once.",
     )
+    password = models.CharField(max_length=255, null=True, blank=True)
+    last_wallet_address = models.CharField(max_length=255, null=True, blank=True)
 
     uid = models.CharField(max_length=12, unique=True, default=uidGenerator)
     wallet_password = models.CharField(max_length=255, null=True, blank=True)
     signup_ip = models.GenericIPAddressField(null=True, blank=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+    freezen = models.BooleanField(default=False, help_text="تجميد الحساب وايقاف عمليات الطلب", verbose_name="تجميد الحساب")
 
     def save(self, *args, **kwargs):
         if not self.invite_code:

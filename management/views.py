@@ -692,6 +692,12 @@ def UserAnalytics(request, user_id):
     })
 
 
+def DeleteProductGroupSuggestion(request, progress_id):
+    suggestion = get_object_or_404(ProductGroupSuggestion, user__progress__id=progress_id)
+    user_id = suggestion.user.id
+    suggestion.delete()
+    return redirect('management:user_analytics', user_id=user_id)
+
 @require_POST
 def deleteUserProgress(request, user_id):
     user = get_object_or_404(User, id=user_id)

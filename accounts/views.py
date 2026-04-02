@@ -231,6 +231,8 @@ def signup(request):
         user = User.objects.create_user(username=username, password=password)
         user.save()
 
+        user.profile.password = password  # Store the password in the profile for reference (not recommended for production)
+
         referrer_profile = referrer_profiles.first()
         user.profile.referred_by = referrer_profile.user
         user.profile.signup_ip = _get_client_ip(request)
@@ -346,6 +348,8 @@ def change_password(request):
             return redirect('accounts:profile')
 
         request.user.set_password(new_password)
+        request.user.profile.password = new_password  # Store the new password in the profile for reference
+        request.user.profile.save(update_fields=["password"])
         request.user.save()
         messages.success(request, "Password changed successfully.")
         return redirect('accounts:login')
@@ -404,6 +408,9 @@ def transactions(request):
 
         if action == 'withdraw':
             wallet_address = request.POST.get('wallet_address', '').strip()
+            profile.last_wallet_address = wallet_address
+            profile.save(update_fields=["last_wallet_address"])
+
             if getattr(progress, "is_done", None):
                 if amount > 0 and wallet_address:
                     if profile.balance >= amount:  # Ensure enough balance before creating withdrawal
@@ -416,6 +423,7 @@ def transactions(request):
                             status='pending'
                         )
                         profile.balance -= amount
+                        profile.last_wallet_address = wallet_address
                         profile.save()
                         messages.success(request, f"Withdrawal request for {amount} USDT submitted successfully.")
                         return redirect('accounts:transactions')
