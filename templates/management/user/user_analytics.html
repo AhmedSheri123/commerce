@@ -94,8 +94,8 @@
                         <button type="submit" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">حذف الاشتراك</button>
                     </form>
                     {% endif %}
-                    {% if user_obj.group_suggestions %}
-                    <form method="post" action="{% url 'management:delete_product_group_suggestion' user_obj.progress.id %}" onsubmit="return confirm('حذف المجموعة؟');">
+                    {% if progress %}
+                    <form method="post" action="{% url 'management:delete_product_group_suggestion' progress.id %}" onsubmit="return confirm('حذف المجموعة؟');">
                         {% csrf_token %}
                         
                         <button type="submit" class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">حذف المجموعة</button>
